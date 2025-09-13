@@ -59,7 +59,7 @@ export function helmet(options: SecurityOptions = {}) {
 
     // X-Frame-Options
     if (frameguard) {
-      const action = typeof frameguard === 'object' ? frameguard.action : 'deny';
+      const action = typeof frameguard === 'object' ? frameguard.action || 'deny' : 'deny';
       ctx.res.setHeader('X-Frame-Options', action.toUpperCase());
     }
 

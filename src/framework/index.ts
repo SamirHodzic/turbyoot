@@ -290,7 +290,7 @@ export function healthCheck(checks: Array<{ name: string; check: () => Promise<b
   };
 }
 
-// Export everything
+// Export everything for backward compatibility
 export * from './types.js';
 export * from './context.js';
 export * from './router.js';

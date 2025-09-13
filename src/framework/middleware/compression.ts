@@ -16,7 +16,7 @@ export function compression(options: CompressionOptions = {}) {
 
   return async (ctx: Context, next: () => Promise<void>) => {
     // Check if response should be compressed
-    if (!filter(ctx.req)) {
+    if (!filter(ctx.req, ctx.res)) {
       await next();
       return;
     }

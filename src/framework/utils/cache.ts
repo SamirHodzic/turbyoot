@@ -8,6 +8,7 @@ export class MemoryCacheAdapter implements CacheAdapter {
     misses: 0,
     sets: 0,
     dels: 0,
+    size: 0,
     hitRate: 0
   };
 
@@ -43,16 +44,6 @@ export class MemoryCacheAdapter implements CacheAdapter {
     this.stats.dels++;
   }
 
-  async delPattern(pattern: string): Promise<void> {
-    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-    for (const key of this.cache.keys()) {
-      if (regex.test(key)) {
-        this.cache.delete(key);
-        this.stats.dels++;
-      }
-    }
-  }
-
   async exists(key: string): Promise<boolean> {
     const item = this.cache.get(key);
     return item ? !(item.expires && Date.now() > item.expires) : false;
@@ -65,7 +56,33 @@ export class MemoryCacheAdapter implements CacheAdapter {
     }
   }
 
+  async clear(): Promise<void> {
+    this.cache.clear();
+    this.stats = { hits: 0, misses: 0, sets: 0, dels: 0, size: 0, hitRate: 0 };
+  }
+
+  async keys(pattern?: string): Promise<string[]> {
+    const keys = Array.from(this.cache.keys());
+    if (pattern) {
+      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      return keys.filter(key => regex.test(key));
+    }
+    return keys;
+  }
+
+  async delPattern(pattern: string): Promise<void> {
+    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    for (const key of this.cache.keys()) {
+      if (regex.test(key)) {
+        this.cache.delete(key);
+        this.stats.dels++;
+      }
+    }
+    this.updateHitRate();
+  }
+
   getStats(): CacheStats {
+    this.stats.size = this.cache.size;
     return { ...this.stats };
   }
 
@@ -113,6 +130,14 @@ export class RedisCacheAdapter implements CacheAdapter {
 
   async expire(key: string, ttl: number): Promise<void> {
     await this.redis.expire(key, ttl);
+  }
+
+  async clear(): Promise<void> {
+    await this.redis.flushdb();
+  }
+
+  async keys(pattern?: string): Promise<string[]> {
+    return await this.redis.keys(pattern || '*');
   }
 }
 

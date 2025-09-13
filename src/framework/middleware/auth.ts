@@ -8,7 +8,6 @@ export interface AuthUser {
 
 // Auth options
 export interface AuthOptions {
-  secret: string;
   cookieName?: string;
   secure?: boolean;
   httpOnly?: boolean;

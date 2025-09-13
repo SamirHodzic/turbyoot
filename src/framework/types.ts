@@ -1,6 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
 
-// Core framework types
+// Core types
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
+
 export interface Context {
   req: IncomingMessage;
   res: ServerResponse;
@@ -18,135 +20,29 @@ export interface Context {
   send(data: any): void;
 }
 
-export type Middleware = (ctx: Context, next: () => Promise<void>) => Promise<void> | void;
-export type RouteHandler = (ctx: Context) => Promise<void> | void;
+export type Next = () => Promise<void>;
+
+export type Middleware = (ctx: Context, next: Next) => Promise<void>;
+
+export type Handler = (ctx: Context) => Promise<void> | void;
 
 export interface Route {
   method: string;
   path: string;
-  handler: RouteHandler;
+  handler: Handler;
   middleware?: Middleware[];
 }
 
-export interface CompiledRoute extends Route {
+export interface CompiledRoute {
+  method: string;
+  path: string;
   regex: RegExp;
   paramNames: string[];
-}
-
-// Middleware types
-export interface SecurityOptions {
-  contentSecurityPolicy?: boolean | string;
-  crossOriginEmbedderPolicy?: boolean | string;
-  crossOriginOpenerPolicy?: boolean | string;
-  crossOriginResourcePolicy?: boolean | string;
-  dnsPrefetchControl?: boolean;
-  frameguard?: boolean | { action: 'deny' | 'sameorigin' };
-  hidePoweredBy?: boolean;
-  hsts?: boolean | { maxAge: number; includeSubDomains?: boolean; preload?: boolean };
-  ieNoOpen?: boolean;
-  noSniff?: boolean;
-  originAgentCluster?: boolean;
-  permittedCrossDomainPolicies?: boolean | string;
-  referrerPolicy?: boolean | string;
-  xssFilter?: boolean;
-}
-
-export interface RateLimitOptions {
-  windowMs: number;
-  max: number;
-  message?: string;
-  skip?: (ctx: Context) => boolean;
-  keyGenerator?: (ctx: Context) => string;
-}
-
-export interface ValidationSchema {
-  body?: Record<string, any>;
-  query?: Record<string, any>;
-  params?: Record<string, any>;
-  headers?: Record<string, any>;
-}
-
-export interface ValidationOptions {
-  schema: ValidationSchema;
-  allowUnknown?: boolean;
-  stripUnknown?: boolean;
-}
-
-export interface TimeoutOptions {
-  timeout: number;
-  onTimeout?: (ctx: Context) => void;
-}
-
-export interface CacheOptions {
-  maxAge?: number;
-  sMaxAge?: number;
-  public?: boolean;
-  private?: boolean;
-  noCache?: boolean;
-  noStore?: boolean;
-  mustRevalidate?: boolean;
-  proxyRevalidate?: boolean;
-  immutable?: boolean;
-  staleWhileRevalidate?: number;
-  staleIfError?: number;
-  vary?: string[];
-  etag?: boolean;
-  lastModified?: boolean;
-  cacheKey?: string | ((ctx: Context) => string);
-  skipCache?: (ctx: Context) => boolean;
-}
-
-export interface CompressionOptions {
-  threshold?: number;
-  level?: number;
-  memLevel?: number;
-  chunkSize?: number;
-  windowBits?: number;
-  strategy?: number;
-  filter?: (req: IncomingMessage) => boolean;
-}
-
-// Cache adapter types
-export interface CacheAdapter {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, ttl?: number): Promise<void>;
-  del(key: string): Promise<void>;
-  delPattern(pattern: string): Promise<void>;
-  exists(key: string): Promise<boolean>;
-  expire(key: string, ttl: number): Promise<void>;
-}
-
-export interface CacheStats {
-  hits: number;
-  misses: number;
-  sets: number;
-  dels: number;
-  hitRate: number;
-}
-
-// Router types
-export interface RouterOptions {
-  prefix?: string;
+  handler: Handler;
   middleware?: Middleware[];
 }
 
-// Health check types
-export interface HealthCheck {
-  name: string;
-  check: () => Promise<boolean> | boolean;
-  timeout?: number;
-}
-
-export interface HealthStatus {
-  status: 'healthy' | 'unhealthy';
-  timestamp: string;
-  uptime: number;
-  checks: Record<string, {
-    status: 'pass' | 'fail';
-    responseTime?: number;
-    error?: string;
-  }>;
-}
+export type RouteHandler = (ctx: Context) => Promise<void> | void;
 
 // Error types
 export class HttpError extends Error {
@@ -161,51 +57,179 @@ export class HttpError extends Error {
   }
 }
 
+// Cache types
+export interface CacheAdapter {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ttl?: number): Promise<void>;
+  del(key: string): Promise<void>;
+  clear(): Promise<void>;
+  keys(pattern?: string): Promise<string[]>;
+  delPattern(pattern: string): Promise<void>;
+  exists(key: string): Promise<boolean>;
+  expire(key: string, ttl: number): Promise<void>;
+}
+
+export interface CacheOptions {
+  maxAge?: number;
+  public?: boolean;
+  private?: boolean;
+  noCache?: boolean;
+  noStore?: boolean;
+  mustRevalidate?: boolean;
+  proxyRevalidate?: boolean;
+  sMaxAge?: number;
+  etag?: boolean;
+  lastModified?: boolean;
+  vary?: string[];
+  immutable?: boolean;
+  staleWhileRevalidate?: number;
+  staleIfError?: number;
+  cacheKey?: (ctx: Context) => string;
+  skipCache?: (ctx: Context) => boolean;
+}
+
+export interface CacheStats {
+  hits: number;
+  misses: number;
+  sets: number;
+  dels: number;
+  size: number;
+  hitRate: number;
+}
+
+export interface CacheManagerOptions {
+  adapter: CacheAdapter;
+  prefix?: string;
+  defaultTtl?: number;
+}
+
+// Timeout types
+export interface TimeoutOptions {
+  timeout: number;
+  onTimeout?: (ctx: Context) => void;
+}
+
+// Validation types
+export interface ValidationSchema {
+  body?: Record<string, any>;
+  query?: Record<string, any>;
+  params?: Record<string, any>;
+  headers?: Record<string, any>;
+}
+
+export interface ValidationOptions {
+  schema: ValidationSchema;
+  stripUnknown?: boolean;
+  abortEarly?: boolean;
+  allowUnknown?: boolean;
+}
+
+// Security types
+export interface SecurityOptions {
+  contentSecurityPolicy?: string | boolean;
+  crossOriginEmbedderPolicy?: boolean | string;
+  crossOriginOpenerPolicy?: boolean | string;
+  crossOriginResourcePolicy?: boolean | string;
+  dnsPrefetchControl?: boolean;
+  frameguard?: boolean | { action?: 'DENY' | 'SAMEORIGIN' };
+  hidePoweredBy?: boolean;
+  hsts?: boolean | { maxAge?: number; includeSubDomains?: boolean; preload?: boolean };
+  ieNoOpen?: boolean;
+  noSniff?: boolean;
+  originAgentCluster?: boolean;
+  permittedCrossDomainPolicies?: boolean | string;
+  referrerPolicy?: boolean | string;
+  xssFilter?: boolean;
+}
+
+export interface RateLimitOptions {
+  windowMs: number;
+  max: number;
+  message?: string;
+  standardHeaders?: boolean;
+  legacyHeaders?: boolean;
+  skip?: (ctx: Context) => boolean;
+  keyGenerator?: (ctx: Context) => string;
+}
+
+// Compression types
+export interface CompressionOptions {
+  threshold?: number;
+  level?: number;
+  memLevel?: number;
+  strategy?: number;
+  chunkSize?: number;
+  windowBits?: number;
+  filter?: (req: IncomingMessage, res: ServerResponse) => boolean;
+}
+
 // Query parsing types
 export interface QueryParseOptions {
   parseNumbers?: boolean;
   parseBooleans?: boolean;
   parseArrays?: boolean;
   arrayLimit?: number;
+  depth?: number;
+  parameterLimit?: number;
   allowPrototypes?: boolean;
   plainObjects?: boolean;
   allowDots?: boolean;
-  depth?: number;
-  parameterLimit?: number;
-  strictNullHandling?: boolean;
-  ignoreQueryPrefix?: boolean;
-  delimiter?: string | RegExp;
   charset?: string;
   charsetSentinel?: boolean;
   interpretNumericEntities?: boolean;
-  parseValues?: boolean;
-  sortFn?: (a: any, b: any) => number;
-  decoder?: (str: string, defaultDecoder: (str: string) => string) => string;
-  encodeValuesOnly?: boolean;
-  format?: string;
-  formatter?: (value: any) => any;
-  validate?: (value: any) => boolean;
+  delimiter?: string | RegExp;
+  strictNullHandling?: boolean;
   skipNulls?: boolean;
+  encodeValuesOnly?: boolean;
+  sort?: (a: string, b: string) => number;
+  decoder?: (str: string, defaultDecoder: (str: string) => string) => string;
+  ignoreQueryPrefix?: boolean;
+  parseValues?: boolean;
+  sortFn?: (a: string, b: string) => number;
+  format?: string;
+  formatter?: any;
+  validate?: any;
   comma?: boolean;
   allowEmptyArrays?: boolean;
-  duplicates?: 'combine' | 'first' | 'last';
+  duplicates?: string;
   allowSparse?: boolean;
-  arrayFormat?: 'indices' | 'brackets' | 'repeat' | 'comma';
+  arrayFormat?: string;
   arrayFormatSeparator?: string;
-  serializeDate?: (date: Date) => string;
-  serialize?: (value: any, defaultSerializer: (value: any) => string) => string;
-  serializeParams?: (params: Record<string, any>) => string;
-  serializeQueryKey?: (key: string) => string;
-  serializeQueryValue?: (value: any) => string;
-  serializeQuery?: (query: Record<string, any>) => string;
-  serializeFragment?: (fragment: string) => string;
-  serializeHash?: (hash: string) => string;
-  serializeHost?: (host: string) => string;
-  serializePassword?: (password: string) => string;
-  serializePathname?: (pathname: string) => string;
-  serializePort?: (port: number) => string;
-  serializeProtocol?: (protocol: string) => string;
-  serializeSearch?: (search: string) => string;
-  serializeUsername?: (username: string) => string;
-  serializeUserinfo?: (userinfo: string) => string;
+  serializeDate?: any;
+  serialize?: any;
+  serializeParams?: any;
+  serializeQueryKey?: any;
+  serializeQueryValue?: any;
+  serializeQuery?: any;
+  serializeFragment?: any;
+  serializeHash?: any;
+  serializeHost?: any;
+  serializePassword?: any;
+  serializePathname?: any;
+  serializePort?: any;
+  serializeProtocol?: any;
+  serializeSearch?: any;
+  serializeUsername?: any;
+  serializeUserinfo?: any;
+}
+
+// Router types
+export interface RouterOptions {
+  prefix?: string;
+  middleware?: Middleware[];
+}
+
+// Auth types
+export interface AuthUser {
+  id: string;
+  [key: string]: any;
+}
+
+export interface AuthOptions {
+  cookieName?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: 'strict' | 'lax' | 'none';
+  tokenExtractor?: (ctx: Context) => string | null;
+  userResolver?: (token: string) => Promise<AuthUser | null>;
 }

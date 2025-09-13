@@ -5,4 +5,4 @@ export * from './caching.js';
 export * from './compression.js';
 export * from './logging.js';
 export * from './timeout.js';
-export * from './auth.js';
+export { auth, requireAuth, requireRole, requirePermission, setAuthCookie, clearAuthCookie } from './auth.js';
