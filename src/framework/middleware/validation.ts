@@ -1,27 +1,22 @@
 import { Context, ValidationOptions, ValidationSchema } from '../types.js';
 
-// Request validation middleware
 export function validate(options: ValidationOptions) {
   const { schema, allowUnknown = false, stripUnknown = false } = options;
 
   return async (ctx: Context, next: () => Promise<void>) => {
     try {
-      // Validate body
       if (schema.body) {
         validateField(ctx.body, schema.body, 'body');
       }
 
-      // Validate query
       if (schema.query) {
         validateField(ctx.query, schema.query, 'query');
       }
 
-      // Validate params
       if (schema.params) {
         validateField(ctx.params, schema.params, 'params');
       }
 
-      // Validate headers
       if (schema.headers) {
         validateField(ctx.req.headers, schema.headers, 'headers');
       }
@@ -35,7 +30,6 @@ export function validate(options: ValidationOptions) {
   };
 }
 
-// Query parameter validation middleware
 export function validateQuery(schema: Record<string, any>) {
   return async (ctx: Context, next: () => Promise<void>) => {
     try {
@@ -49,7 +43,6 @@ export function validateQuery(schema: Record<string, any>) {
   };
 }
 
-// Field validation helper
 export function validateField(value: any, schema: Record<string, any>, field: string): void {
   for (const [key, rules] of Object.entries(schema)) {
     const fieldValue = value[key];
@@ -59,7 +52,6 @@ export function validateField(value: any, schema: Record<string, any>, field: st
     }
 
     if (fieldValue !== undefined && fieldValue !== null) {
-      // Type validation
       if (rules.type) {
         const expectedType = rules.type;
         const actualType = Array.isArray(fieldValue) ? 'array' : typeof fieldValue;
@@ -85,7 +77,6 @@ export function validateField(value: any, schema: Record<string, any>, field: st
         }
       }
 
-      // String validation
       if (rules.type === 'string' || typeof fieldValue === 'string') {
         if (rules.minLength && fieldValue.length < rules.minLength) {
           throw new Error(`${field}.${key} must be at least ${rules.minLength} characters long`);
@@ -104,7 +95,6 @@ export function validateField(value: any, schema: Record<string, any>, field: st
         }
       }
 
-      // Number validation
       if (rules.type === 'number' || typeof fieldValue === 'number') {
         const numValue = Number(fieldValue);
         
@@ -117,7 +107,6 @@ export function validateField(value: any, schema: Record<string, any>, field: st
         }
       }
 
-      // Array validation
       if (rules.type === 'array' || Array.isArray(fieldValue)) {
         if (rules.minItems && fieldValue.length < rules.minItems) {
           throw new Error(`${field}.${key} must have at least ${rules.minItems} items`);
@@ -138,14 +127,12 @@ export function validateField(value: any, schema: Record<string, any>, field: st
         }
       }
 
-      // Object validation
       if (rules.type === 'object' || (typeof fieldValue === 'object' && !Array.isArray(fieldValue))) {
         if (rules.properties) {
           validateField(fieldValue, rules.properties, `${field}.${key}`);
         }
       }
 
-      // Custom validation
       if (rules.validate && typeof rules.validate === 'function') {
         const isValid = rules.validate(fieldValue);
         if (isValid !== true) {

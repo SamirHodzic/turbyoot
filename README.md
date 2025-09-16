@@ -1,21 +1,21 @@
-# 🚀 Turbyoot
+# Turbyoot
 
 A modern, intuitive Node.js web framework that makes building APIs simple and enjoyable. Turbyoot combines the best of Express.js with enhanced features like fluent APIs, resource routing, and built-in TypeScript support.
 
-## ✨ Features
+## Features
 
-- **🎯 Fluent API** - Chainable, intuitive syntax that's more readable than Express
-- **📦 Resource Routing** - Automatic CRUD routes with custom handlers and filtering
-- **🔗 Grouped Routes** - Organize routes with prefixes and shared middleware
-- **🔌 Plugin System** - Extend functionality with a clean plugin architecture
-- **🔒 Security** - Built-in security headers, CORS, and rate limiting
-- **⚡ Performance** - Request caching, compression, and timeout handling
-- **🛡️ Validation** - Request validation and sanitization
-- **🔐 Auth Infrastructure** - Flexible authentication and authorization middleware
-- **📊 Monitoring** - Request logging, health checks, and metrics
-- **🎯 Developer Experience** - TypeScript support, enhanced context, and comprehensive error handling
+- **Fluent API** - Chainable, intuitive syntax that's more readable than Express
+- **Resource Routing** - Automatic CRUD routes with custom handlers and filtering
+- **Grouped Routes** - Organize routes with prefixes and shared middleware
+- **Plugin System** - Extend functionality with a clean plugin architecture
+- **Security** - Built-in security headers, CORS, and rate limiting
+- **Performance** - Request caching, compression, and timeout handling
+- **Validation** - Request validation and sanitization
+- **Auth Infrastructure** - Flexible authentication and authorization middleware
+- **Monitoring** - Request logging, health checks, and metrics
+- **Developer Experience** - TypeScript support, enhanced context, and comprehensive error handling
 
-## 📦 Installation
+## Installation
 
 ```bash
 npm install turbyoot
@@ -23,7 +23,7 @@ npm install turbyoot
 yarn add turbyoot
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ```typescript
 import { Turbyoot } from 'turbyoot';
@@ -61,7 +61,7 @@ app.listen(3000, () => {
 });
 ```
 
-## 🎯 Enhanced Features
+## Enhanced Features
 
 ### 1. Fluent API - More Intuitive Than Express
 
@@ -237,7 +237,7 @@ app.get('/users', (ctx) => {
 - **Configuration**: Pass options to plugins
 - **Middleware**: Plugins can add global middleware
 
-## 📦 Organized Imports
+## Organized Imports
 
 Turbyoot provides organized imports for better developer experience:
 
@@ -261,7 +261,7 @@ import { Context, Middleware, AuthUser } from 'turbyoot/types';
 import { Turbyoot, cors, helmet, rateLimit, validate, auth, requireAuth } from 'turbyoot';
 ```
 
-## 🏗️ Core Framework
+## Core Framework
 
 ### Basic Server Setup
 
@@ -322,7 +322,7 @@ app.get('/users/:id', (ctx) => {
 });
 ```
 
-## 🛡️ Security
+## Security
 
 ### Security Headers (Helmet-like)
 
@@ -362,7 +362,7 @@ app.use(rateLimit({
 }));
 ```
 
-## ✅ Validation
+## Validation
 
 ### Request Validation
 
@@ -403,7 +403,7 @@ app.get('/search', validateQuery({
 });
 ```
 
-## 🔐 Authentication & Authorization
+## Authentication & Authorization
 
 ### Auth Middleware
 
@@ -507,7 +507,7 @@ app.post('/logout', (ctx) => {
 });
 ```
 
-## ⚡ Performance
+## Performance
 
 ### Response Caching
 
@@ -558,7 +558,7 @@ app.use(timeout({
 }));
 ```
 
-## 📊 Monitoring & Logging
+## Monitoring & Logging
 
 ### Request Logging
 
@@ -594,7 +594,7 @@ app.get('/health', healthCheck([
 ]));
 ```
 
-## 🗂️ Route Organization
+## Route Organization
 
 ### Router Groups
 
@@ -610,7 +610,7 @@ apiRouter.post('/users', (ctx) => ctx.json({ created: true }));
 apiRouter.mount(app);
 ```
 
-## 🔧 Error Handling
+## Error Handling
 
 ### Built-in Error Handling
 
@@ -628,7 +628,7 @@ app.get('/server-error', (ctx) => {
 });
 ```
 
-## 📝 Middleware
+## Middleware
 
 ### Custom Middleware
 
@@ -649,7 +649,7 @@ app.get('/users',
 );
 ```
 
-## 🎯 TypeScript Support
+## TypeScript Support
 
 Turbyoot is built with TypeScript and provides full type safety:
 
@@ -665,7 +665,7 @@ const myMiddleware: Middleware = async (ctx: Context, next) => {
 };
 ```
 
-## 🌟 Real-World Examples
+## Real-World Examples
 
 ### Complete API with Authentication
 
@@ -896,7 +896,7 @@ app.post('/api/notifications', async (ctx) => {
 });
 ```
 
-## 🚀 Advanced Features
+## Advanced Features
 
 ### Cache Adapter System
 
@@ -1121,7 +1121,7 @@ app.resource('users', {
 });
 ```
 
-**Result:** 50% less code, more readable, type-safe, and maintainable! 🚀
+**Result:** 50% less code, more readable, type-safe, and maintainable!
 
 ## 🤝 Contributing
 
@@ -1137,4 +1137,4 @@ Inspired by Express.js and other modern web frameworks, built with ❤️ for th
 
 ---
 
-**Turbyoot** - Lightweight, fast, and flexible. Perfect for building modern web applications. 🚀
+**Turbyoot** - Lightweight, fast, and flexible. Perfect for building modern web applications.

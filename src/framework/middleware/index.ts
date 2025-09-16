@@ -1,4 +1,3 @@
-// Middleware exports
 export * from './security.js';
 export * from './validation.js';
 export * from './caching.js';

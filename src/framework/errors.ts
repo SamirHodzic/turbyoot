@@ -1,12 +1,10 @@
 import { Context, HttpError } from './types.js';
 
-// Error handling utilities
 export function errorHandler() {
   return async (ctx: Context, next: () => Promise<void>) => {
     try {
       await next();
     } catch (err) {
-      // Only send response if headers haven't been sent yet
       if (!ctx.res.headersSent) {
         if (err instanceof HttpError) {
           ctx.statusCode = err.status;
@@ -24,12 +22,10 @@ export function errorHandler() {
           ctx.json({ error: 'Internal Server Error', status: 500 });
         }
       } else {
-        // If headers already sent, just log the error
         console.error('Error after response sent:', err);
       }
     }
   };
 }
 
-// Re-export HttpError from types for convenience
 export { HttpError } from './types.js';

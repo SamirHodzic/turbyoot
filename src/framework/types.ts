@@ -1,6 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
 
-// Core types
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
 
 export interface Context {
@@ -12,14 +11,12 @@ export interface Context {
   statusCode: number;
   state: Record<string, any>;
   
-  // Enhanced response methods
   json(data: any): Context;
   status(code: number): Context;
   redirect(url: string, status?: number): Context;
   type(contentType: string): Context;
   send(data: any): Context;
   
-  // New intuitive methods
   ok(data?: any): Context;
   created(data?: any): Context;
   noContent(): Context;
@@ -32,12 +29,10 @@ export interface Context {
   tooManyRequests(message?: string): Context;
   internalError(message?: string): Context;
   
-  // Convenience methods
   header(name: string, value: string): Context;
   cookie(name: string, value: string, options?: any): Context;
   clearCookie(name: string, options?: any): Context;
   
-  // Request helpers
   is(mimeType: string): boolean;
   accepts(types: string[]): string | false;
   get(field: string): string | undefined;
@@ -67,7 +62,6 @@ export interface CompiledRoute {
 
 export type RouteHandler = (ctx: Context) => Promise<void> | void;
 
-// Error types
 export class HttpError extends Error {
   status: number;
   expose: boolean;
@@ -80,7 +74,6 @@ export class HttpError extends Error {
   }
 }
 
-// Cache types
 export interface CacheAdapter {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ttl?: number): Promise<void>;
@@ -126,13 +119,11 @@ export interface CacheManagerOptions {
   defaultTtl?: number;
 }
 
-// Timeout types
 export interface TimeoutOptions {
   timeout: number;
   onTimeout?: (ctx: Context) => void;
 }
 
-// Validation types
 export interface ValidationSchema {
   body?: Record<string, any>;
   query?: Record<string, any>;
@@ -147,7 +138,6 @@ export interface ValidationOptions {
   allowUnknown?: boolean;
 }
 
-// Security types
 export interface SecurityOptions {
   contentSecurityPolicy?: string | boolean;
   crossOriginEmbedderPolicy?: boolean | string;
@@ -175,7 +165,6 @@ export interface RateLimitOptions {
   keyGenerator?: (ctx: Context) => string;
 }
 
-// Compression types
 export interface CompressionOptions {
   threshold?: number;
   level?: number;
@@ -186,7 +175,6 @@ export interface CompressionOptions {
   filter?: (req: IncomingMessage, res: ServerResponse) => boolean;
 }
 
-// Query parsing types
 export interface QueryParseOptions {
   parseNumbers?: boolean;
   parseBooleans?: boolean;
@@ -236,13 +224,11 @@ export interface QueryParseOptions {
   serializeUserinfo?: any;
 }
 
-// Router types
 export interface RouterOptions {
   prefix?: string;
   middleware?: Middleware[];
 }
 
-// Fluent API types
 export interface FluentRoute {
   get(path: string, handler: RouteHandler): FluentRoute;
   post(path: string, handler: RouteHandler): FluentRoute;
@@ -284,7 +270,6 @@ export interface PluginOptions {
   [key: string]: any;
 }
 
-// Auth types
 export interface AuthUser {
   id: string;
   [key: string]: any;

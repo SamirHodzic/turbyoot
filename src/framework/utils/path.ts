@@ -1,4 +1,3 @@
-// Path compilation and matching utilities
 export function compilePath(path: string): { regex: RegExp; paramNames: string[] } {
   const paramNames: string[] = [];
   let pattern = path

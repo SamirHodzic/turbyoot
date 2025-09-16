@@ -1,7 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Context } from './types.js';
 
-// Create context object
 export function createContext(req: IncomingMessage, res: ServerResponse, params: Record<string, string> = {}, query: Record<string, any> = {}, body: any = null): Context {
   const context: Context = {
     req,
@@ -58,7 +57,6 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
       return this;
     },
 
-    // New intuitive response methods
     ok(data?: any) {
       this.statusCode = 200;
       if (!this.res.headersSent) {
@@ -166,7 +164,6 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
       return this;
     },
 
-    // Convenience methods
     header(name: string, value: string) {
       if (!this.res.headersSent) {
         this.res.setHeader(name, value);
@@ -190,7 +187,6 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
       return this;
     },
 
-    // Request helpers
     is(mimeType: string): boolean {
       const contentType = this.req.headers['content-type'] || '';
       return contentType.includes(mimeType);

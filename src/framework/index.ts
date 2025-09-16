@@ -17,7 +17,6 @@ import { Router } from './router.js';
 import { errorHandler, HttpError } from './errors.js';
 import { FluentRouter, createResource, PluginManager } from './fluent.js';
 
-// Main Turbyoot framework class
 export class Turbyoot {
   private routes: CompiledRoute[] = [];
   private middleware: Middleware[] = [];
@@ -25,16 +24,13 @@ export class Turbyoot {
   private pluginManager: PluginManager = new PluginManager();
 
   constructor() {
-    // Add default error handler
     this.use(errorHandler());
   }
 
-  // Add middleware
   use(middleware: Middleware): void {
     this.middleware.push(middleware);
   }
 
-  // Add route
   add(method: string, path: string, handlerOrMiddleware: RouteHandler | Middleware, finalHandler?: RouteHandler): void {
     const compiledPath = compilePath(path);
     const route: CompiledRoute = {
@@ -49,7 +45,6 @@ export class Turbyoot {
     this.routes.push(route);
   }
 
-  // HTTP method shortcuts
   get(path: string, handler: RouteHandler): void;
   get(path: string, middleware: Middleware, handler: RouteHandler): void;
   get(path: string, handlerOrMiddleware: RouteHandler | Middleware, finalHandler?: RouteHandler): void {
@@ -92,7 +87,6 @@ export class Turbyoot {
     this.add('HEAD', path, handlerOrMiddleware, finalHandler);
   }
 
-  // Static file serving
   static(
     directory: string,
     options: {
@@ -124,15 +118,12 @@ export class Turbyoot {
         return;
       }
 
-      // This is a simplified static file serving
-      // In a real implementation, you'd use fs and path modules
       ctx.statusCode = 404;
       ctx.res.statusCode = 404;
       ctx.json({ error: 'File not found', status: 404 });
     };
   }
 
-  // Health check utility
   healthCheck(
     checks: Array<{
       name: string;
@@ -181,16 +172,13 @@ export class Turbyoot {
     };
   }
 
-  // Start server
   listen(port: number, callback?: () => void): void {
     this.server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       try {
-        // Parse URL
         const url = new URL(req.url || '/', `http://${req.headers.host}`);
         const pathname = url.pathname;
         const query = parseQueryParams(url.search);
 
-        // Parse body
         let body: any = null;
         if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
           try {
@@ -201,7 +189,6 @@ export class Turbyoot {
           }
         }
 
-        // Find matching route
         let matchedRoute: CompiledRoute | null = null;
         let params: Record<string, string> = {};
 
@@ -216,30 +203,25 @@ export class Turbyoot {
           }
         }
 
-        // Create context
         const ctx = createContext(req, res, params, query, body);
 
-        // Execute middleware chain
         let middlewareIndex = 0;
         const executeMiddleware = async (): Promise<void> => {
           if (middlewareIndex < this.middleware.length) {
             const middleware = this.middleware[middlewareIndex++];
             await middleware(ctx, executeMiddleware);
           } else if (matchedRoute) {
-            // Execute route-specific middleware
             let routeMiddlewareIndex = 0;
             const executeRouteMiddleware = async (): Promise<void> => {
               if (routeMiddlewareIndex < (matchedRoute.middleware || []).length) {
                 const middleware = matchedRoute.middleware![routeMiddlewareIndex++];
                 await middleware(ctx, executeRouteMiddleware);
               } else {
-                // Execute route handler
                 await matchedRoute.handler(ctx);
               }
             };
             await executeRouteMiddleware();
           } else {
-            // No route found
             ctx.statusCode = 404;
             ctx.res.statusCode = 404;
             ctx.json({ error: 'Not Found', status: 404 });
@@ -258,7 +240,6 @@ export class Turbyoot {
     this.server.listen(port, callback);
   }
 
-  // Close server
   close(): void {
     if (this.server) {
       this.server.close();
@@ -266,24 +247,17 @@ export class Turbyoot {
   }
 
   // ========================================
-  // ENHANCED FLUENT API METHODS
-  // ========================================
-
-  // Fluent route creation
   route(): FluentRoute {
     const router = new FluentRouter(this);
     return router;
   }
 
-  // Group routes with prefix and middleware
   group(prefix: string, callback: (router: FluentRouter) => void): void {
     const router = new FluentRouter(this);
 
-    // Create a group router that applies the prefix
     const groupRouter = new FluentRouter(this);
     groupRouter.middleware = [...router.middleware];
 
-    // Override methods to apply prefix
     const originalMethods = ['get', 'post', 'put', 'del', 'patch', 'options', 'head'];
     for (const method of originalMethods) {
       const originalMethod = (groupRouter as any)[method];
@@ -296,7 +270,6 @@ export class Turbyoot {
       };
     }
 
-    // Handle resource method
     const originalResource = groupRouter.resource.bind(groupRouter);
     groupRouter.resource = (name: string, options: ResourceOptions = {}) => {
       const prefixedOptions = {
@@ -306,7 +279,6 @@ export class Turbyoot {
       return originalResource(name, prefixedOptions);
     };
 
-    // Handle group method for nested groups
     const originalGroup = groupRouter.group.bind(groupRouter);
     groupRouter.group = (subPrefix: string, subCallback: (router: FluentRoute) => void) => {
       const fullPrefix = subPrefix.startsWith('/') ? `${prefix}${subPrefix}` : `${prefix}/${subPrefix}`;
@@ -317,7 +289,6 @@ export class Turbyoot {
 
     const routes = groupRouter.getRoutes();
 
-    // Add all routes to this app
     for (const route of routes) {
       if (route.middleware.length > 0) {
         this.add(route.method, route.path, route.middleware[0], route.handler);
@@ -327,16 +298,13 @@ export class Turbyoot {
     }
   }
 
-  // Resource-based routing
   resource(name: string, options: ResourceOptions = {}): void {
     const router = new FluentRouter(this);
     router.resource(name, options);
 
-    // Get all routes from the router and add them to this app
     const routes = router.getRoutes();
 
     for (const route of routes) {
-      // The route.path already includes the prefix from the FluentRouter
       if (route.middleware.length > 0) {
         this.add(route.method, route.path, route.middleware[0], route.handler);
       } else {
@@ -345,7 +313,6 @@ export class Turbyoot {
     }
   }
 
-  // Plugin system
   plugin(plugin: Plugin): Turbyoot {
     this.pluginManager.register(plugin);
     this.pluginManager.install(this);
@@ -353,7 +320,6 @@ export class Turbyoot {
   }
 }
 
-// Standalone health check function
 export function healthCheck(
   checks: Array<{
     name: string;
@@ -402,7 +368,6 @@ export function healthCheck(
   };
 }
 
-// Export everything for backward compatibility
 export * from './types.js';
 export * from './context.js';
 export * from './router.js';
@@ -410,6 +375,5 @@ export * from './errors.js';
 export * from './utils/index.js';
 export * from './middleware/index.js';
 
-// Export new enhanced features
 export * from './fluent.js';
 export { EnhancedTurbyoot as TurbyootV2 } from './fluent.js';

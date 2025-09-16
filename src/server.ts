@@ -393,7 +393,6 @@ app.get("/cache-test", async (ctx) => {
   const cache = getCache();
   const key = "test-key";
 
-  // Set a value in cache
   await cache.set(
     key,
     JSON.stringify({
@@ -403,7 +402,6 @@ app.get("/cache-test", async (ctx) => {
     60
   ); // 60 seconds TTL
 
-  // Get value from cache
   const cached = await cache.get(key);
   const exists = await cache.exists(key);
 
@@ -441,7 +439,7 @@ let userData = [
 async function simulateDbCall(operation: string, id?: number) {
   dbCallCount++;
   console.log(
-    `🗄️  Database call #${dbCallCount}: ${operation}${
+    `Database call #${dbCallCount}: ${operation}${
       id ? ` for user ${id}` : ""
     }`
   );
@@ -591,7 +589,6 @@ app.get(
     {
       name: "database",
       check: async () => {
-        // Simulate database check
         await new Promise((resolve) => setTimeout(resolve, 100));
         return true;
       },
@@ -600,7 +597,6 @@ app.get(
     {
       name: "redis",
       check: async () => {
-        // Simulate Redis check
         await new Promise((resolve) => setTimeout(resolve, 50));
         return true;
       },

@@ -1,6 +1,5 @@
 import { QueryParseOptions } from '../types.js';
 
-// Enhanced query parameter parsing
 export function parseQueryParams(queryString: string, options: QueryParseOptions = {}): Record<string, any> {
   const {
     parseNumbers = true,
@@ -54,12 +53,10 @@ export function parseQueryParams(queryString: string, options: QueryParseOptions
     return {};
   }
 
-  // Remove query prefix if present
   if (ignoreQueryPrefix && queryString.charAt(0) === '?') {
     queryString = queryString.slice(1);
   }
 
-  // Split by delimiter
   const pairs = queryString.split(delimiter);
   const result: Record<string, any> = {};
 
@@ -81,7 +78,6 @@ export function parseQueryParams(queryString: string, options: QueryParseOptions
       value = decoder(pair.slice(equalIndex + 1), decodeURIComponent);
     }
 
-    // Handle array notation
     if (parseArrays && (key.endsWith('[]') || key.endsWith(']'))) {
       const arrayKey = key.replace(/\[\]$/, '');
       if (!result[arrayKey]) {
@@ -95,7 +91,6 @@ export function parseQueryParams(queryString: string, options: QueryParseOptions
         }
       }
     } else {
-      // Handle dot notation
       if (allowDots) {
         setNestedValue(result, key, value, { parseNumbers, parseBooleans, parseValues, depth });
       } else {
@@ -126,23 +121,19 @@ function parseValue(value: string, options: { parseNumbers: boolean; parseBoolea
     return value;
   }
 
-  // Handle null
   if (value === 'null') {
     return null;
   }
 
-  // Handle undefined
   if (value === 'undefined') {
     return undefined;
   }
 
-  // Handle booleans
   if (options.parseBooleans) {
     if (value === 'true') return true;
     if (value === 'false') return false;
   }
 
-  // Handle numbers
   if (options.parseNumbers) {
     if (value === '') return '';
     if (!isNaN(Number(value)) && !isNaN(parseFloat(value))) {
@@ -150,7 +141,6 @@ function parseValue(value: string, options: { parseNumbers: boolean; parseBoolea
     }
   }
 
-  // Handle JSON
   if (value.startsWith('{') || value.startsWith('[')) {
     try {
       return JSON.parse(value);

@@ -1,6 +1,5 @@
 import { Context, Middleware, RouteHandler, FluentRoute, ResourceOptions } from './types.js';
 
-// Fluent API implementation
 export class FluentRouter implements FluentRoute {
   private app: any;
   public middleware: Middleware[] = [];
@@ -290,7 +289,6 @@ export class FluentRouter implements FluentRoute {
   }
 }
 
-// Resource-based routing helper
 export function createResource(name: string, options: ResourceOptions = {}) {
   return (app: any) => {
     const router = new FluentRouter(app);
@@ -315,7 +313,6 @@ export class PluginManager {
   }
 }
 
-// Enhanced Turbyoot with fluent API
 export class EnhancedTurbyoot {
   private app: any;
   private pluginManager = new PluginManager();

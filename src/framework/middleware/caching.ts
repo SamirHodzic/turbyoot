@@ -2,7 +2,6 @@ import { Context, CacheOptions } from '../types.js';
 import { getCache } from '../utils/cache.js';
 import { createHash } from 'crypto';
 
-// Basic cache middleware (header-based)
 export function cache(options: CacheOptions = {}) {
   const {
     maxAge = 0,
@@ -22,7 +21,6 @@ export function cache(options: CacheOptions = {}) {
   } = options;
 
   return async (ctx: Context, next: () => Promise<void>) => {
-    // Set cache control headers
     const directives: string[] = [];
     
     if (noStore) {
@@ -71,17 +69,14 @@ export function cache(options: CacheOptions = {}) {
       ctx.res.setHeader('Cache-Control', directives.join(', '));
     }
 
-    // Set Vary header
     if (vary.length > 0) {
       ctx.res.setHeader('Vary', vary.join(', '));
     }
 
-    // Set ETag
     if (etag) {
       const etagValue = generateETag(ctx);
       ctx.res.setHeader('ETag', etagValue);
       
-      // Check if client has cached version
       const ifNoneMatch = ctx.req.headers['if-none-match'];
       if (ifNoneMatch === etagValue) {
         ctx.statusCode = 304;
@@ -91,12 +86,10 @@ export function cache(options: CacheOptions = {}) {
       }
     }
 
-    // Set Last-Modified
     if (lastModified) {
       const lastModifiedValue = new Date().toUTCString();
       ctx.res.setHeader('Last-Modified', lastModifiedValue);
       
-      // Check if client has cached version
       const ifModifiedSince = ctx.req.headers['if-modified-since'];
       if (ifModifiedSince && new Date(ifModifiedSince) >= new Date(lastModifiedValue)) {
         ctx.statusCode = 304;
@@ -110,7 +103,6 @@ export function cache(options: CacheOptions = {}) {
   };
 }
 
-// Store-based cache middleware
 export function cacheWithStore(options: CacheOptions = {}) {
   const {
     maxAge = 300,
@@ -119,7 +111,6 @@ export function cacheWithStore(options: CacheOptions = {}) {
   } = options;
 
   return async (ctx: Context, next: () => Promise<void>) => {
-    // Skip cache if skipCache function returns true
     if (skipCache && skipCache(ctx)) {
       await next();
       return;
@@ -129,22 +120,18 @@ export function cacheWithStore(options: CacheOptions = {}) {
     const key = cache.generateCacheKey(ctx, cacheKey);
     
     try {
-      // Try to get from cache
       const cached = await cache.get(key);
       
       if (cached) {
-        // Cache hit - return cached response
         const { statusCode, headers, body } = JSON.parse(cached);
         
         ctx.statusCode = statusCode;
         ctx.res.statusCode = statusCode;
         
-        // Set headers
         Object.entries(headers).forEach(([name, value]) => {
           ctx.res.setHeader(name, value as string);
         });
         
-        // Set cache headers
         ctx.res.setHeader('Cache-Control', `public, max-age=${maxAge}`);
         ctx.res.setHeader('X-Cache', 'HIT');
         
@@ -155,16 +142,13 @@ export function cacheWithStore(options: CacheOptions = {}) {
       console.warn('Cache get error:', error);
     }
 
-    // Cache miss - execute handler and store result
     let responseBody = '';
     let responseHeaders: Record<string, string> = {};
     let responseSent = false;
     
-    // Store original methods
     const originalSend = ctx.send;
     const originalJson = ctx.json;
     
-    // Override send method to capture response
     ctx.send = function(data: any) {
       if (!responseSent) {
         responseBody = typeof data === 'string' ? data : JSON.stringify(data);
@@ -174,7 +158,6 @@ export function cacheWithStore(options: CacheOptions = {}) {
       return this;
     };
 
-    // Override json method to capture response
     ctx.json = function(data: any) {
       if (!responseSent) {
         responseBody = JSON.stringify(data);
@@ -187,7 +170,6 @@ export function cacheWithStore(options: CacheOptions = {}) {
 
     await next();
 
-    // Store response in cache (only if response was sent)
     if (responseSent) {
       try {
         const responseData = {
@@ -208,28 +190,23 @@ export function cacheWithStore(options: CacheOptions = {}) {
   };
 }
 
-// Conditional request middleware
 export function conditional() {
   return async (ctx: Context, next: () => Promise<void>) => {
     const etag = ctx.req.headers['if-none-match'];
     const lastModified = ctx.req.headers['if-modified-since'];
     
     if (etag || lastModified) {
-      // This is a conditional request
-      // The actual conditional logic will be handled by the cache middleware
     }
     
     await next();
   };
 }
 
-// Cache invalidation utility
 export async function invalidateCache(pattern: string): Promise<void> {
   const cache = getCache();
   await cache.delPattern(pattern);
 }
 
-// Generate ETag for response
 function generateETag(ctx: Context): string {
   const content = `${ctx.req.url}:${ctx.req.headers['accept'] || ''}`;
   return `"${createHash('md5').update(content).digest('hex')}"`;

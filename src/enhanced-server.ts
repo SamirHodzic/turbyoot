@@ -23,10 +23,8 @@ import {
 import { AuthUser } from "./framework/types.js";
 import { initCache } from "./framework/utils/index.js";
 
-// Initialize cache
 initCache();
 
-// Create the enhanced Turbyoot app (now includes all features by default)
 const app = new Turbyoot();
 
 // Auth configuration
@@ -67,7 +65,7 @@ app.use(auth(authOptions));
 // 1. FLUENT API EXAMPLES
 // ========================================
 
-console.log("🚀 Setting up Fluent API examples...");
+console.log("Setting up Fluent API examples...");
 
 // Fluent chaining API
 app.route()
@@ -228,7 +226,7 @@ app.resource("admin", {
 // 3. SIMPLE ROUTE EXAMPLES
 // ========================================
 
-console.log("🎯 Setting up Simple route examples...");
+console.log("Setting up Simple route examples...");
 
 // Simple route examples without decorators
 app.get("/simple/users", requireAuth(), (ctx) => {
@@ -261,7 +259,7 @@ app.post("/simple/users", requireAuth(), (ctx) => {
 // 3. ENHANCED CONTEXT METHODS
 // ========================================
 
-console.log("✨ Setting up Enhanced Context examples...");
+console.log("Setting up Enhanced Context examples...");
 
 // Demonstrate new context methods
 app.get("/context-examples", (ctx) => {
@@ -378,7 +376,7 @@ app.route()
 // 6. VALIDATION EXAMPLES
 // ========================================
 
-console.log("✅ Setting up Validation examples...");
+console.log("Setting up Validation examples...");
 
 const userValidation = validate({
   schema: {
@@ -423,10 +421,9 @@ app.route()
 // 8. AUTHENTICATION EXAMPLES
 // ========================================
 
-console.log("🔐 Setting up Authentication examples...");
+console.log("Setting up Authentication examples...");
 
 app.post("/auth/login", (ctx) => {
-  // Simulate login
   const token = "fake-jwt-token";
   setAuthCookie(ctx, token, authOptions);
   ctx.ok({
@@ -488,7 +485,7 @@ app.get("/health", app.healthCheck([
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
-  console.log(`\n🎉 Enhanced Turbyoot server listening on http://localhost:${port}`);
+  console.log(`\nEnhanced Turbyoot server listening on http://localhost:${port}`);
   console.log("\n📚 Available endpoints:");
   console.log("  • Fluent API: /fluent/hello, /fluent/echo");
   console.log("  • Resource routing: /api/posts, /api/users, /api/admin");
@@ -499,5 +496,5 @@ app.listen(port, () => {
   console.log("  • Caching: /cached/data");
   console.log("  • Auth: /auth/login, /auth/logout, /protected, /admin-only");
   console.log("  • Health check: /health");
-  console.log("\n✨ Try the new fluent API - it's much more intuitive than Express!");
+  console.log("\nTry the new fluent API - it's much more intuitive than Express!");
 });

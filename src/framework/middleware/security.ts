@@ -1,6 +1,5 @@
 import { Context, SecurityOptions, RateLimitOptions } from '../types.js';
 
-// Security headers middleware (Helmet-like)
 export function helmet(options: SecurityOptions = {}) {
   return async (ctx: Context, next: () => Promise<void>) => {
     const {
@@ -20,7 +19,6 @@ export function helmet(options: SecurityOptions = {}) {
       xssFilter = true
     } = options;
 
-    // Content Security Policy
     if (contentSecurityPolicy) {
       const csp = typeof contentSecurityPolicy === 'string' 
         ? contentSecurityPolicy 
@@ -28,7 +26,6 @@ export function helmet(options: SecurityOptions = {}) {
       ctx.res.setHeader('Content-Security-Policy', csp);
     }
 
-    // Cross-Origin Embedder Policy
     if (crossOriginEmbedderPolicy) {
       const coep = typeof crossOriginEmbedderPolicy === 'string'
         ? crossOriginEmbedderPolicy
@@ -36,7 +33,6 @@ export function helmet(options: SecurityOptions = {}) {
       ctx.res.setHeader('Cross-Origin-Embedder-Policy', coep);
     }
 
-    // Cross-Origin Opener Policy
     if (crossOriginOpenerPolicy) {
       const coop = typeof crossOriginOpenerPolicy === 'string'
         ? crossOriginOpenerPolicy
@@ -44,7 +40,6 @@ export function helmet(options: SecurityOptions = {}) {
       ctx.res.setHeader('Cross-Origin-Opener-Policy', coop);
     }
 
-    // Cross-Origin Resource Policy
     if (crossOriginResourcePolicy) {
       const corp = typeof crossOriginResourcePolicy === 'string'
         ? crossOriginResourcePolicy
@@ -52,45 +47,37 @@ export function helmet(options: SecurityOptions = {}) {
       ctx.res.setHeader('Cross-Origin-Resource-Policy', corp);
     }
 
-    // DNS Prefetch Control
     if (dnsPrefetchControl) {
       ctx.res.setHeader('X-DNS-Prefetch-Control', 'off');
     }
 
-    // X-Frame-Options
     if (frameguard) {
       const action = typeof frameguard === 'object' ? frameguard.action || 'deny' : 'deny';
       ctx.res.setHeader('X-Frame-Options', action.toUpperCase());
     }
 
-    // Hide X-Powered-By
     if (hidePoweredBy) {
       ctx.res.removeHeader('X-Powered-By');
     }
 
-    // HTTP Strict Transport Security
     if (hsts) {
       const hstsOptions = typeof hsts === 'object' ? hsts : { maxAge: 31536000 };
       const hstsValue = `max-age=${hstsOptions.maxAge}${hstsOptions.includeSubDomains ? '; includeSubDomains' : ''}${hstsOptions.preload ? '; preload' : ''}`;
       ctx.res.setHeader('Strict-Transport-Security', hstsValue);
     }
 
-    // X-Download-Options
     if (ieNoOpen) {
       ctx.res.setHeader('X-Download-Options', 'noopen');
     }
 
-    // X-Content-Type-Options
     if (noSniff) {
       ctx.res.setHeader('X-Content-Type-Options', 'nosniff');
     }
 
-    // Origin-Agent-Cluster
     if (originAgentCluster) {
       ctx.res.setHeader('Origin-Agent-Cluster', '?1');
     }
 
-    // X-Permitted-Cross-Domain-Policies
     if (permittedCrossDomainPolicies) {
       const policy = typeof permittedCrossDomainPolicies === 'string'
         ? permittedCrossDomainPolicies
@@ -98,7 +85,6 @@ export function helmet(options: SecurityOptions = {}) {
       ctx.res.setHeader('X-Permitted-Cross-Domain-Policies', policy);
     }
 
-    // Referrer Policy
     if (referrerPolicy) {
       const policy = typeof referrerPolicy === 'string'
         ? referrerPolicy
@@ -106,7 +92,6 @@ export function helmet(options: SecurityOptions = {}) {
       ctx.res.setHeader('Referrer-Policy', policy);
     }
 
-    // X-XSS-Protection
     if (xssFilter) {
       ctx.res.setHeader('X-XSS-Protection', '1; mode=block');
     }
@@ -115,7 +100,6 @@ export function helmet(options: SecurityOptions = {}) {
   };
 }
 
-// CORS middleware
 export function cors(options: {
   origin?: string | string[] | ((origin: string) => boolean);
   methods?: string | string[];
@@ -140,7 +124,6 @@ export function cors(options: {
   return async (ctx: Context, next: () => Promise<void>) => {
     const reqOrigin = ctx.req.headers.origin;
     
-    // Set origin
     if (origin === '*') {
       ctx.res.setHeader('Access-Control-Allow-Origin', '*');
     } else if (typeof origin === 'function') {
@@ -155,12 +138,10 @@ export function cors(options: {
       ctx.res.setHeader('Access-Control-Allow-Origin', origin);
     }
 
-    // Set credentials
     if (credentials) {
       ctx.res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
 
-    // Handle preflight requests
     if (ctx.req.method === 'OPTIONS') {
       ctx.res.setHeader('Access-Control-Allow-Methods', Array.isArray(methods) ? methods.join(', ') : methods);
       ctx.res.setHeader('Access-Control-Allow-Headers', Array.isArray(allowedHeaders) ? allowedHeaders.join(', ') : allowedHeaders);
@@ -181,13 +162,11 @@ export function cors(options: {
   };
 }
 
-// Rate limiting middleware
 export function rateLimit(options: RateLimitOptions) {
   const { windowMs, max, message = 'Too many requests', skip, keyGenerator } = options;
   const requests = new Map<string, { count: number; resetTime: number }>();
 
   return async (ctx: Context, next: () => Promise<void>) => {
-    // Skip if skip function returns true
     if (skip && skip(ctx)) {
       await next();
       return;
@@ -197,7 +176,6 @@ export function rateLimit(options: RateLimitOptions) {
     const now = Date.now();
     const windowStart = now - windowMs;
 
-    // Clean up old entries
     for (const [k, v] of requests.entries()) {
       if (v.resetTime < windowStart) {
         requests.delete(k);

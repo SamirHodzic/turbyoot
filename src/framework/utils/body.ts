@@ -1,6 +1,5 @@
 import { IncomingMessage } from 'http';
 
-// Request body parsing utilities
 export async function parseBody(req: IncomingMessage): Promise<any> {
   return new Promise((resolve, reject) => {
     let body = '';

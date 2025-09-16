@@ -1,7 +1,6 @@
 import { Context, Middleware, RouteHandler, RouterOptions } from './types.js';
 import { compilePath, matchPath } from './utils/path.js';
 
-// Router class for route grouping
 export class Router {
   private routes: Array<{ method: string; path: string; handler: RouteHandler; middleware?: Middleware[] }> = [];
   private prefix: string;
@@ -12,13 +11,11 @@ export class Router {
     this.middleware = options.middleware || [];
   }
 
-  // Add route to router
   add(method: string, path: string, handler: RouteHandler, middleware?: Middleware[]): void {
     const fullPath = this.prefix + path;
     this.routes.push({ method, path: fullPath, handler, middleware });
   }
 
-  // HTTP method shortcuts
   get(path: string, handler: RouteHandler, middleware?: Middleware[]): void {
     this.add('GET', path, handler, middleware);
   }
@@ -47,25 +44,21 @@ export class Router {
     this.add('HEAD', path, handler, middleware);
   }
 
-  // Mount router on main app
   mount(app: any): void {
     for (const route of this.routes) {
       const compiledPath = compilePath(route.path);
       
       app.add(route.method, route.path, async (ctx: Context) => {
-        // Apply router middleware
         for (const middleware of this.middleware) {
           await middleware(ctx, async () => {});
         }
         
-        // Apply route-specific middleware
         if (route.middleware) {
           for (const middleware of route.middleware) {
             await middleware(ctx, async () => {});
           }
         }
         
-        // Execute route handler
         await route.handler(ctx);
       });
     }
