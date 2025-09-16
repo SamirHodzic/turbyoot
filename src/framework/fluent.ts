@@ -273,10 +273,13 @@ export class FluentRouter implements FluentRoute {
       return originalResource(name, prefixedOptions);
     };
 
-    callback(groupRouter);
+    const originalGroup = groupRouter.group.bind(groupRouter);
+    groupRouter.group = (subPrefix: string, subCallback: (router: FluentRoute) => void) => {
+      const fullPrefix = subPrefix.startsWith('/') ? `${prefix}${subPrefix}` : `${prefix}/${subPrefix}`;
+      return originalGroup(fullPrefix, subCallback);
+    };
 
-    // Add all routes from the group router to this router
-    this.routes.push(...groupRouter.getRoutes());
+    callback(groupRouter);
 
     return this;
   }
@@ -421,7 +424,7 @@ export class EnhancedTurbyoot {
   // Group routing
   group(prefix: string, callback: (router: FluentRoute) => void): void {
     const router = new FluentRouter(this.app);
-    callback(router.group(prefix, callback));
+    router.group(prefix, callback);
   }
 
   // Plugin system

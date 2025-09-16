@@ -20,11 +20,35 @@ app.group('/api/v1', (router) => {
     postRouter.get('/:id', (ctx) => ctx.ok({ post: { id: ctx.params.id } }));
     postRouter.put('/:id', (ctx) => ctx.ok({ post: { id: ctx.params.id, ...ctx.body } }));
     postRouter.del('/:id', (ctx) => ctx.noContent());
+
+    postRouter.group('/comments', (commentRouter) => {
+      commentRouter.get('/', (ctx) => ctx.ok({ comments: [] }));
+      commentRouter.post('/', (ctx) => ctx.created({ comment: { id: 1, ...ctx.body } }));
+      commentRouter.get('/:id', (ctx) => ctx.ok({ comment: { id: ctx.params.id } }));
+      commentRouter.put('/:id', (ctx) => ctx.ok({ comment: { id: ctx.params.id, ...ctx.body } }));
+      commentRouter.del('/:id', (ctx) => ctx.noContent());
+
+      commentRouter.group('/replies', (replyRouter) => {
+        replyRouter.get('/', (ctx) => ctx.ok({ replies: [] }));
+        replyRouter.post('/', (ctx) => ctx.created({ reply: { id: 1, ...ctx.body } }));
+        replyRouter.get('/:id', (ctx) => ctx.ok({ reply: { id: ctx.params.id } }));
+        replyRouter.put('/:id', (ctx) => ctx.ok({ reply: { id: ctx.params.id, ...ctx.body } }));
+        replyRouter.del('/:id', (ctx) => ctx.noContent());
+
+        replyRouter.group('/likes', (likeRouter) => {
+          likeRouter.get('/', (ctx) => ctx.ok({ likes: [] }));
+          likeRouter.post('/', (ctx) => ctx.created({ like: { id: 1, ...ctx.body } }));
+          likeRouter.get('/:id', (ctx) => ctx.ok({ like: { id: ctx.params.id } }));
+          likeRouter.put('/:id', (ctx) => ctx.ok({ like: { id: ctx.params.id, ...ctx.body } }));
+          likeRouter.del('/:id', (ctx) => ctx.noContent());
+        });
+      });
+    });
   });
 });
 
 console.log('=== Routes registered ===');
-// console.log('Total routes:', app.routes || 'No routes property');
+console.log('Total routes:', app.routes || 'No routes property');
 
 // Start server to test
 const port = 3005;
