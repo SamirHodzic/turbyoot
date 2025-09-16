@@ -1,17 +1,28 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { Context, Middleware, RouteHandler, CompiledRoute } from './types.js';
+import {
+  Context,
+  Middleware,
+  RouteHandler,
+  CompiledRoute,
+  FluentRoute,
+  ResourceOptions,
+  Plugin,
+  PluginOptions,
+} from './types.js';
 import { createContext } from './context.js';
 import { compilePath, matchPath } from './utils/path.js';
 import { parseBody } from './utils/body.js';
 import { parseQueryParams } from './utils/query.js';
 import { Router } from './router.js';
 import { errorHandler, HttpError } from './errors.js';
+import { FluentRouter, createResource, PluginManager } from './fluent.js';
 
 // Main Turbyoot framework class
 export class Turbyoot {
   private routes: CompiledRoute[] = [];
   private middleware: Middleware[] = [];
   private server: any = null;
+  private pluginManager: PluginManager = new PluginManager();
 
   constructor() {
     // Add default error handler
@@ -32,9 +43,9 @@ export class Turbyoot {
       regex: compiledPath.regex,
       paramNames: compiledPath.paramNames,
       handler: finalHandler || (handlerOrMiddleware as RouteHandler),
-      middleware: finalHandler ? [handlerOrMiddleware as Middleware] : []
+      middleware: finalHandler ? [handlerOrMiddleware as Middleware] : [],
     };
-    
+
     this.routes.push(route);
   }
 
@@ -82,9 +93,17 @@ export class Turbyoot {
   }
 
   // Static file serving
-  static(directory: string, options: { prefix?: string; maxAge?: number; etag?: boolean; lastModified?: boolean } = {}): Middleware {
+  static(
+    directory: string,
+    options: {
+      prefix?: string;
+      maxAge?: number;
+      etag?: boolean;
+      lastModified?: boolean;
+    } = {},
+  ): Middleware {
     const { prefix = '/static', maxAge = 0, etag = true, lastModified = true } = options;
-    
+
     return async (ctx: Context, next: () => Promise<void>) => {
       if (ctx.req.method !== 'GET' && ctx.req.method !== 'HEAD') {
         await next();
@@ -114,7 +133,13 @@ export class Turbyoot {
   }
 
   // Health check utility
-  healthCheck(checks: Array<{ name: string; check: () => Promise<boolean> | boolean; timeout?: number }> = []): RouteHandler {
+  healthCheck(
+    checks: Array<{
+      name: string;
+      check: () => Promise<boolean> | boolean;
+      timeout?: number;
+    }> = [],
+  ): RouteHandler {
     return async (ctx: Context) => {
       const startTime = Date.now();
       const results: Record<string, { status: 'pass' | 'fail'; responseTime?: number; error?: string }> = {};
@@ -127,25 +152,22 @@ export class Turbyoot {
             setTimeout(() => reject(new Error('Check timeout')), timeout);
           });
 
-          const result = await Promise.race([
-            Promise.resolve(check.check()),
-            timeoutPromise
-          ]);
+          const result = await Promise.race([Promise.resolve(check.check()), timeoutPromise]);
 
           results[check.name] = {
             status: result ? 'pass' : 'fail',
-            responseTime: Date.now() - checkStart
+            responseTime: Date.now() - checkStart,
           };
         } catch (error) {
           results[check.name] = {
             status: 'fail',
             responseTime: Date.now() - checkStart,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           };
         }
       }
 
-      const allPassed = Object.values(results).every(result => result.status === 'pass');
+      const allPassed = Object.values(results).every((result) => result.status === 'pass');
       const status = allPassed ? 'healthy' : 'unhealthy';
 
       ctx.statusCode = allPassed ? 200 : 503;
@@ -154,7 +176,7 @@ export class Turbyoot {
         status,
         timestamp: new Date().toISOString(),
         uptime: Date.now() - startTime,
-        checks: results
+        checks: results,
       });
     };
   }
@@ -242,10 +264,103 @@ export class Turbyoot {
       this.server.close();
     }
   }
+
+  // ========================================
+  // ENHANCED FLUENT API METHODS
+  // ========================================
+
+  // Fluent route creation
+  route(): FluentRoute {
+    const router = new FluentRouter(this);
+    return router;
+  }
+
+  // Group routes with prefix and middleware
+  group(prefix: string, callback: (router: FluentRouter) => void): void {
+    const router = new FluentRouter(this);
+
+    // Create a group router that applies the prefix
+    const groupRouter = new FluentRouter(this);
+    groupRouter.middleware = [...router.middleware];
+
+    // Override methods to apply prefix
+    const originalMethods = ['get', 'post', 'put', 'del', 'patch', 'options', 'head'];
+    for (const method of originalMethods) {
+      const originalMethod = (groupRouter as any)[method];
+      (groupRouter as any)[method] = (path: string, handler: RouteHandler) => {
+        // const prefixedPath = path.startsWith('/') ? `${prefix}${path}` : `${prefix}/${path}`;
+        const fPrefix = String(prefix).replace(/\/+$/, '');
+        const fPath = String(path).replace(/^\/+/, '');
+        const prefixedPath = fPath ? `${fPrefix}/${fPath}` : fPrefix || '/';
+        return originalMethod.call(groupRouter, prefixedPath, handler);
+      };
+    }
+
+    // Handle resource method
+    const originalResource = groupRouter.resource.bind(groupRouter);
+    groupRouter.resource = (name: string, options: ResourceOptions = {}) => {
+      const prefixedOptions = {
+        ...options,
+        prefix: options.prefix ? `${prefix}${options.prefix}` : prefix,
+      };
+      return originalResource(name, prefixedOptions);
+    };
+
+    // Handle group method for nested groups
+    const originalGroup = groupRouter.group.bind(groupRouter);
+    groupRouter.group = (subPrefix: string, subCallback: (router: FluentRoute) => void) => {
+      const fullPrefix = subPrefix.startsWith('/') ? `${prefix}${subPrefix}` : `${prefix}/${subPrefix}`;
+      return originalGroup(fullPrefix, subCallback);
+    };
+
+    callback(groupRouter);
+
+    const routes = groupRouter.getRoutes();
+
+    // Add all routes to this app
+    for (const route of routes) {
+      if (route.middleware.length > 0) {
+        this.add(route.method, route.path, route.middleware[0], route.handler);
+      } else {
+        this.add(route.method, route.path, route.handler);
+      }
+    }
+  }
+
+  // Resource-based routing
+  resource(name: string, options: ResourceOptions = {}): void {
+    const router = new FluentRouter(this);
+    router.resource(name, options);
+
+    // Get all routes from the router and add them to this app
+    const routes = router.getRoutes();
+
+    for (const route of routes) {
+      // The route.path already includes the prefix from the FluentRouter
+      if (route.middleware.length > 0) {
+        this.add(route.method, route.path, route.middleware[0], route.handler);
+      } else {
+        this.add(route.method, route.path, route.handler);
+      }
+    }
+  }
+
+  // Plugin system
+  plugin(plugin: Plugin): Turbyoot {
+    this.pluginManager.register(plugin);
+    this.pluginManager.install(this);
+    return this;
+  }
 }
 
 // Standalone health check function
-export function healthCheck(checks: Array<{ name: string; check: () => Promise<boolean> | boolean; timeout?: number }> = []) {
+export function healthCheck(
+  checks: Array<{
+    name: string;
+    check: () => Promise<boolean> | boolean;
+    timeout?: number;
+  }> = [],
+) {
   return async (ctx: Context) => {
     const startTime = Date.now();
     const results: Record<string, { status: 'pass' | 'fail'; responseTime?: number; error?: string }> = {};
@@ -258,25 +373,22 @@ export function healthCheck(checks: Array<{ name: string; check: () => Promise<b
           setTimeout(() => reject(new Error('Check timeout')), timeout);
         });
 
-        const result = await Promise.race([
-          Promise.resolve(check.check()),
-          timeoutPromise
-        ]);
+        const result = await Promise.race([Promise.resolve(check.check()), timeoutPromise]);
 
         results[check.name] = {
           status: result ? 'pass' : 'fail',
-          responseTime: Date.now() - checkStart
+          responseTime: Date.now() - checkStart,
         };
       } catch (error) {
         results[check.name] = {
           status: 'fail',
           responseTime: Date.now() - checkStart,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         };
       }
     }
 
-    const allPassed = Object.values(results).every(result => result.status === 'pass');
+    const allPassed = Object.values(results).every((result) => result.status === 'pass');
     const status = allPassed ? 'healthy' : 'unhealthy';
 
     ctx.statusCode = allPassed ? 200 : 503;
@@ -285,7 +397,7 @@ export function healthCheck(checks: Array<{ name: string; check: () => Promise<b
       status,
       timestamp: new Date().toISOString(),
       uptime: Date.now() - startTime,
-      checks: results
+      checks: results,
     });
   };
 }
@@ -297,3 +409,7 @@ export * from './router.js';
 export * from './errors.js';
 export * from './utils/index.js';
 export * from './middleware/index.js';
+
+// Export new enhanced features
+export * from './fluent.js';
+export { EnhancedTurbyoot as TurbyootV2 } from './fluent.js';

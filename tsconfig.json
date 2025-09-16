@@ -15,7 +15,9 @@
     "resolveJsonModule": true,
     "noImplicitAny": true,
     "allowImportingTsExtensions": false,
-    "noEmit": false
+    "noEmit": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src"]
 }

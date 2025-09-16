@@ -171,6 +171,7 @@ export function cacheWithStore(options: CacheOptions = {}) {
         responseSent = true;
         originalSend.call(this, data);
       }
+      return this;
     };
 
     // Override json method to capture response
@@ -181,6 +182,7 @@ export function cacheWithStore(options: CacheOptions = {}) {
         responseSent = true;
         originalJson.call(this, data);
       }
+      return this;
     };
 
     await next();

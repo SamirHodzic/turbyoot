@@ -12,12 +12,35 @@ export interface Context {
   statusCode: number;
   state: Record<string, any>;
   
-  // Response methods
-  json(data: any): void;
+  // Enhanced response methods
+  json(data: any): Context;
   status(code: number): Context;
-  redirect(url: string, status?: number): void;
-  type(contentType: string): void;
-  send(data: any): void;
+  redirect(url: string, status?: number): Context;
+  type(contentType: string): Context;
+  send(data: any): Context;
+  
+  // New intuitive methods
+  ok(data?: any): Context;
+  created(data?: any): Context;
+  noContent(): Context;
+  badRequest(message?: string): Context;
+  unauthorized(message?: string): Context;
+  forbidden(message?: string): Context;
+  notFound(message?: string): Context;
+  conflict(message?: string): Context;
+  unprocessableEntity(message?: string): Context;
+  tooManyRequests(message?: string): Context;
+  internalError(message?: string): Context;
+  
+  // Convenience methods
+  header(name: string, value: string): Context;
+  cookie(name: string, value: string, options?: any): Context;
+  clearCookie(name: string, options?: any): Context;
+  
+  // Request helpers
+  is(mimeType: string): boolean;
+  accepts(types: string[]): string | false;
+  get(field: string): string | undefined;
 }
 
 export type Next = () => Promise<void>;
@@ -217,6 +240,48 @@ export interface QueryParseOptions {
 export interface RouterOptions {
   prefix?: string;
   middleware?: Middleware[];
+}
+
+// Fluent API types
+export interface FluentRoute {
+  get(path: string, handler: RouteHandler): FluentRoute;
+  post(path: string, handler: RouteHandler): FluentRoute;
+  put(path: string, handler: RouteHandler): FluentRoute;
+  del(path: string, handler: RouteHandler): FluentRoute;
+  patch(path: string, handler: RouteHandler): FluentRoute;
+  options(path: string, handler: RouteHandler): FluentRoute;
+  head(path: string, handler: RouteHandler): FluentRoute;
+  use(middleware: Middleware): FluentRoute;
+  resource(name: string, options?: ResourceOptions): FluentRoute;
+  group(prefix: string, callback: (router: FluentRoute) => void): FluentRoute;
+}
+
+// Resource-based routing
+export interface ResourceOptions {
+  only?: string[];
+  except?: string[];
+  middleware?: Middleware[];
+  prefix?: string;
+  handlers?: {
+    index?: RouteHandler;
+    show?: RouteHandler;
+    create?: RouteHandler;
+    update?: RouteHandler;
+    patch?: RouteHandler;
+    destroy?: RouteHandler;
+  };
+}
+
+
+// Plugin system
+export interface Plugin {
+  name: string;
+  version: string;
+  install(app: any): void | Promise<void>;
+}
+
+export interface PluginOptions {
+  [key: string]: any;
 }
 
 // Auth types
