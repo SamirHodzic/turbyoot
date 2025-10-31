@@ -57,6 +57,10 @@ export function parseQueryParams(queryString: string, options: QueryParseOptions
     queryString = queryString.slice(1);
   }
 
+  if (!allowDots && !parseArrays && !parseNumbers && !parseBooleans && duplicates === 'last') {
+    return parseSimpleQuery(queryString);
+  }
+
   const pairs = queryString.split(delimiter);
   const result: Record<string, any> = {};
 
@@ -113,6 +117,20 @@ export function parseQueryParams(queryString: string, options: QueryParseOptions
     }
   }
 
+  return result;
+}
+
+function parseSimpleQuery(queryString: string): Record<string, any> {
+  const result: Record<string, any> = {};
+  const pairs = queryString.split('&');
+  for (const pair of pairs) {
+    const eqIndex = pair.indexOf('=');
+    if (eqIndex === -1) {
+      result[decodeURIComponent(pair)] = '';
+    } else {
+      result[decodeURIComponent(pair.slice(0, eqIndex))] = decodeURIComponent(pair.slice(eqIndex + 1));
+    }
+  }
   return result;
 }
 
