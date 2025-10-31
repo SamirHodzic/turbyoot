@@ -44,15 +44,14 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
     },
     
     send(data: any) {
-      if (!this.res.headersSent) {
-        if (typeof data === 'string') {
-          this.res.setHeader('Content-Type', 'text/plain');
-          this.res.end(data);
-        } else if (Buffer.isBuffer(data)) {
-          this.res.end(data);
-        } else {
-          this.json(data);
-        }
+      if (this.res.headersSent) return this;
+      if (typeof data === 'string') {
+        this.res.setHeader('Content-Type', 'text/plain');
+        this.res.end(data);
+      } else if (Buffer.isBuffer(data)) {
+        this.res.end(data);
+      } else {
+        this.json(data);
       }
       return this;
     },

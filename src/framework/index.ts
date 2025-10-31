@@ -175,9 +175,11 @@ export class Turbyoot {
   listen(port: number, callback?: () => void): void {
     this.server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       try {
-        const url = new URL(req.url || '/', `http://${req.headers.host}`);
-        const pathname = url.pathname;
-        const query = parseQueryParams(url.search);
+        const urlString = req.url || '/';
+        const queryIndex = urlString.indexOf('?');
+        const pathname = queryIndex === -1 ? urlString : urlString.slice(0, queryIndex);
+        const queryString = queryIndex === -1 ? '' : urlString.slice(queryIndex + 1);
+        const query = queryString ? parseQueryParams(queryString) : {};
 
         let body: any = null;
         if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
@@ -231,9 +233,11 @@ export class Turbyoot {
         await executeMiddleware();
       } catch (error) {
         console.error('Server error:', error);
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Internal Server Error', status: 500 }));
+        if (!res.headersSent) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Internal Server Error', status: 500 }));
+        }
       }
     });
 
