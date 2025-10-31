@@ -1,21 +1,47 @@
 {
   "name": "turbyoot",
+  "description": "A modern, intuitive Node.js web framework that makes building APIs simple and enjoyable.",
   "version": "0.1.0",
-  "private": true,
-  "type": "module",
+  "author": "SamirHodzic <samir.sgd@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SamirHodzic/turbyoot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SamirHodzic/turbyoot/issues"
+  },
+  "keywords": [
+    "app",
+    "api",
+    "framework",
+    "web",
+    "http",
+    "rest",
+    "restful",
+    "router",
+    "nodejs",
+    "turbyoot"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p .",
-    "dev": "ts-node src/server.ts",
-    "dev:enhanced": "ts-node src/enhanced-server.ts",
-    "start": "node dist/server.js",
-    "start:enhanced": "node dist/enhanced-server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:unit": "jest --testPathPattern=unit",
-    "test:integration": "jest --testPathPattern=integration",
-    "lint": "echo \"no linter configured\""
+    "test:integration": "jest --testPathPattern=integration"
   },
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "main": "dist/framework.js",
+  "types": "dist/types/framework.d.ts",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist"
+  ],
   "devDependencies": {
     "@types/autocannon": "^7.12.7",
     "@types/jest": "^29.5.0",
@@ -25,8 +51,5 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.4.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

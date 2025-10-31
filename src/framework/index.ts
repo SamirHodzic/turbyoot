@@ -376,4 +376,4 @@ export * from './utils/index.js';
 export * from './middleware/index.js';
 
 export * from './fluent.js';
-export { EnhancedTurbyoot as TurbyootV2 } from './fluent.js';
+export { EnhancedTurbyoot } from './fluent.js';
