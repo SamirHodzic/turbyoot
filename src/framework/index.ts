@@ -193,16 +193,36 @@ export class Turbyoot {
 
         let matchedRoute: CompiledRoute | null = null;
         let params: Record<string, string> = {};
+        let routesOnPath: CompiledRoute[] = [];
 
         for (const route of this.routes) {
-          if (route.method === req.method) {
-            const match = matchPath(route, pathname);
-            if (match.match) {
+          const match = matchPath(route, pathname);
+          if (match.match) {
+            routesOnPath.push(route);
+            if (route.method === req.method) {
               matchedRoute = route;
               params = match.params;
               break;
             }
           }
+        }
+
+        if (req.method === 'OPTIONS' && !matchedRoute && routesOnPath.length > 0) {
+          const routeMiddleware: Middleware[] = [];
+          for (const route of routesOnPath) {
+            if (route.middleware) {
+              routeMiddleware.push(...route.middleware);
+            }
+          }
+          
+          matchedRoute = {
+            method: 'OPTIONS',
+            path: pathname,
+            regex: new RegExp('^' + pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'),
+            paramNames: [],
+            handler: async () => {},
+            middleware: routeMiddleware,
+          };
         }
 
         const ctx = createContext(req, res, params, query, body);

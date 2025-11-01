@@ -135,7 +135,11 @@ export function cors(options: {
         ctx.res.setHeader('Access-Control-Allow-Origin', reqOrigin);
       }
     } else {
-      ctx.res.setHeader('Access-Control-Allow-Origin', origin);
+      if (reqOrigin && reqOrigin === origin) {
+        ctx.res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+      } else if (!reqOrigin) {
+        ctx.res.setHeader('Access-Control-Allow-Origin', origin);
+      }
     }
 
     if (credentials) {
