@@ -31,5 +31,5 @@ jobs:
       run: npm run lint
     
     - name: Run tests
-      run: npm test -- --forceExit
+      run: npm run test:coverage
 
