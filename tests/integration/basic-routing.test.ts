@@ -3,7 +3,6 @@ import { Turbyoot } from '../../src/framework/index.js';
 
 describe('Basic Routing Integration Tests', () => {
   let app: Turbyoot;
-  let server: any;
   let baseUrl: string;
 
   beforeAll(async () => {
@@ -32,16 +31,17 @@ describe('Basic Routing Integration Tests', () => {
 
     // Start server on a random port
     const port = 3001 + Math.floor(Math.random() * 1000);
-    server = app.listen(port);
+    app.listen(port);
     baseUrl = `http://localhost:${port}`;
     
     // Wait for server to start
     await new Promise(resolve => setTimeout(resolve, 100));
   });
 
-  afterAll(() => {
-    if (server) {
-      server.close();
+  afterAll(async () => {
+    if (app) {
+      app.close();
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
   });
 
