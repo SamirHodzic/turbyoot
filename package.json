@@ -39,6 +39,32 @@
   "type": "module",
   "main": "dist/framework.js",
   "types": "dist/types/framework.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/framework.d.ts",
+      "import": "./dist/framework.js"
+    },
+    "./core": {
+      "types": "./dist/types/framework/core.d.ts",
+      "import": "./dist/framework/core.js"
+    },
+    "./middleware": {
+      "types": "./dist/types/framework/middleware.d.ts",
+      "import": "./dist/framework/middleware.js"
+    },
+    "./auth": {
+      "types": "./dist/types/framework/auth.d.ts",
+      "import": "./dist/framework/auth.js"
+    },
+    "./utils": {
+      "types": "./dist/types/framework/utils.d.ts",
+      "import": "./dist/framework/utils.js"
+    },
+    "./types": {
+      "types": "./dist/types/framework/types.d.ts",
+      "import": "./dist/framework/types.js"
+    }
+  },
   "files": [
     "LICENSE",
     "README.md",
