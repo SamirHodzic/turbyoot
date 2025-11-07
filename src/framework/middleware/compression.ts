@@ -39,7 +39,91 @@ export function compression(options: CompressionOptions = {}) {
       return;
     }
 
+    let responseBody: Buffer | null = null;
+    let responseSent = false;
+    let contentType: string | null = null;
+
+    ctx.send = function(data: any) {
+      if (responseSent || this.res.headersSent) return this;
+      
+      if (typeof data === 'string') {
+        responseBody = Buffer.from(data, 'utf8');
+        contentType = 'text/plain';
+      } else if (Buffer.isBuffer(data)) {
+        responseBody = data;
+      } else {
+        return this.json(data);
+      }
+      
+      responseSent = true;
+      return this;
+    };
+
+    ctx.json = function(data: any) {
+      if (responseSent || this.res.headersSent) return this;
+      
+      const jsonString = JSON.stringify(data);
+      responseBody = Buffer.from(jsonString, 'utf8');
+      contentType = 'application/json';
+      responseSent = true;
+      return this;
+    };
+
     await next();
+
+    if (responseSent && responseBody) {
+      const body: Buffer = responseBody;
+      const bodyLength = body.length;
+      
+      if (bodyLength < threshold) {
+        if (!ctx.res.headersSent) {
+          if (contentType) {
+            ctx.res.setHeader('Content-Type', contentType);
+          }
+          ctx.res.end(body);
+        }
+        return;
+      }
+
+      if (!ctx.res.headersSent) {
+        if (contentType) {
+          ctx.res.setHeader('Content-Type', contentType);
+        }
+        
+        const existingVary = ctx.res.getHeader('Vary');
+        const varyHeader = existingVary 
+          ? `${existingVary}, Accept-Encoding`
+          : 'Accept-Encoding';
+        ctx.res.setHeader('Vary', varyHeader);
+        ctx.res.setHeader('Content-Encoding', encoding);
+
+        try {
+          const compressed = await new Promise<Buffer>((resolve, reject) => {
+            const compressedChunks: Buffer[] = [];
+            
+            compressor.on('data', (chunk: Buffer) => {
+              compressedChunks.push(chunk);
+            });
+            
+            compressor.on('end', () => {
+              resolve(Buffer.concat(compressedChunks));
+            });
+            
+            compressor.on('error', reject);
+            
+            compressor.write(body);
+            compressor.end();
+          });
+
+          ctx.res.setHeader('Content-Length', compressed.length.toString());
+          ctx.res.end(compressed);
+        } catch {
+          ctx.res.removeHeader('Content-Encoding');
+          ctx.res.removeHeader('Vary');
+          ctx.res.end(body);
+        }
+      }
+    }
   };
 }
 

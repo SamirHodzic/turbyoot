@@ -1,4 +1,3 @@
-// Test setup and global configurations
 import { jest } from '@jest/globals';
 
 // Mock console methods to reduce noise in tests
@@ -14,5 +13,4 @@ global.console = {
 // Global test timeout
 jest.setTimeout(10000);
 
-// Mock process.env for tests
 process.env.NODE_ENV = 'test';
