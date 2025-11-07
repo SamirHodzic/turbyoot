@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { Turbyoot } from '../../src/framework/index.js';
+import { validate } from '../../src/framework/middleware/validation.js';
 
 describe('Complete API Integration Tests', () => {
   let app: Turbyoot;
@@ -101,6 +102,75 @@ describe('Complete API Integration Tests', () => {
 
     app.get('/api/unauthorized', (ctx: any) => {
       ctx.unauthorized('Access denied');
+    });
+
+    // Test validation middleware
+    app.post('/api/validate/user', validate({
+      schema: {
+        body: {
+          name: { required: true, type: 'string', minLength: 2 },
+          email: { required: true, type: 'string', pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' },
+          age: { type: 'number', min: 18, max: 120 }
+        }
+      }
+    }), (ctx: any) => {
+      ctx.created({ 
+        user: ctx.body,
+        requestId: ctx.state.requestId
+      });
+    });
+
+    app.post('/api/validate/user-strict', validate({
+      schema: {
+        body: {
+          name: { required: true, type: 'string' },
+          email: { required: true, type: 'string' }
+        }
+      },
+      allowUnknown: false
+    }), (ctx: any) => {
+      ctx.created({ user: ctx.body });
+    });
+
+    app.post('/api/validate/user-strip', validate({
+      schema: {
+        body: {
+          name: { required: true, type: 'string' },
+          email: { required: true, type: 'string' }
+        }
+      },
+      allowUnknown: true,
+      stripUnknown: true
+    }), (ctx: any) => {
+      ctx.created({ user: ctx.body });
+    });
+
+    app.get('/api/validate/search', validate({
+      schema: {
+        query: {
+          q: { required: true, type: 'string', minLength: 2 },
+          page: { type: 'number', min: 1 },
+          limit: { type: 'number', min: 1, max: 100 }
+        }
+      }
+    }), (ctx: any) => {
+      ctx.ok({ 
+        query: ctx.query,
+        requestId: ctx.state.requestId
+      });
+    });
+
+    app.get('/api/validate/users/:id', validate({
+      schema: {
+        params: {
+          id: { required: true, type: 'number' }
+        }
+      }
+    }), (ctx: any) => {
+      ctx.ok({ 
+        userId: ctx.params.id,
+        requestId: ctx.state.requestId
+      });
     });
 
     // Start server
@@ -271,6 +341,159 @@ describe('Complete API Integration Tests', () => {
       const response = await fetch(`${baseUrl}/api/nonexistent`);
       expect(response.status).toBe(404);
       expect(await response.json()).toEqual({ error: 'Not Found', status: 404 });
+    });
+  });
+
+  describe('Validation Middleware', () => {
+    it('should validate request body and allow valid data', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'John Doe',
+          email: 'john@example.com',
+          age: 30
+        })
+      });
+      
+      expect(response.status).toBe(201);
+      const data = await response.json() as any;
+      expect(data.user.name).toBe('John Doe');
+      expect(data.user.email).toBe('john@example.com');
+      expect(data.user.age).toBe(30);
+      expect(data.requestId).toBeDefined();
+    });
+
+    it('should reject request with missing required field', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'John Doe'
+        })
+      });
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('required');
+      expect(data.status).toBe(400);
+    });
+
+    it('should reject request with invalid email format', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'John Doe',
+          email: 'invalid-email'
+        })
+      });
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('format is invalid');
+      expect(data.status).toBe(400);
+    });
+
+    it('should reject request with invalid age range', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'John Doe',
+          email: 'john@example.com',
+          age: 150
+        })
+      });
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('at most 120');
+      expect(data.status).toBe(400);
+    });
+
+    it('should reject unknown fields when allowUnknown is false', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/user-strict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'John Doe',
+          email: 'john@example.com',
+          unknown: 'field'
+        })
+      });
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('is not allowed');
+      expect(data.status).toBe(400);
+    });
+
+    it('should strip unknown fields when stripUnknown is true', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/user-strip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'John Doe',
+          email: 'john@example.com',
+          unknown: 'field',
+          another: 'unknown'
+        })
+      });
+      
+      expect(response.status).toBe(201);
+      const data = await response.json() as any;
+      expect(data.user.name).toBe('John Doe');
+      expect(data.user.email).toBe('john@example.com');
+      expect(data.user.unknown).toBeUndefined();
+      expect(data.user.another).toBeUndefined();
+    });
+
+    it('should validate query parameters', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/search?q=test&page=1&limit=10`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json() as any;
+      expect(data.query.q).toBe('test');
+      expect(data.query.page).toBe(1);
+      expect(data.query.limit).toBe(10);
+      expect(data.requestId).toBeDefined();
+    });
+
+    it('should reject request with missing required query parameter', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/search?page=1&limit=10`);
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('required');
+      expect(data.status).toBe(400);
+    });
+
+    it('should reject request with invalid query parameter value', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/search?q=t&page=1&limit=10`);
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('at least 2 characters');
+      expect(data.status).toBe(400);
+    });
+
+    it('should validate route parameters', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/users/123`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json() as any;
+      expect(data.userId).toBe('123');
+      expect(data.requestId).toBeDefined();
+    });
+
+    it('should reject request with invalid route parameter type', async () => {
+      const response = await fetch(`${baseUrl}/api/validate/users/abc`);
+      
+      expect(response.status).toBe(400);
+      const data = await response.json() as any;
+      expect(data.error).toContain('must be a number');
+      expect(data.status).toBe(400);
     });
   });
 });

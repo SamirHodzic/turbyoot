@@ -10,7 +10,7 @@ export function compression(options: CompressionOptions = {}) {
     chunkSize = 16 * 1024,
     windowBits = 15,
     strategy = 0,
-    filter = defaultFilter
+    filter = defaultFilter,
   } = options;
 
   return async (ctx: Context, next: () => Promise<void>) => {
@@ -43,9 +43,9 @@ export function compression(options: CompressionOptions = {}) {
     let responseSent = false;
     let contentType: string | null = null;
 
-    ctx.send = function(data: any) {
+    ctx.send = function (data: any) {
       if (responseSent || this.res.headersSent) return this;
-      
+
       if (typeof data === 'string') {
         responseBody = Buffer.from(data, 'utf8');
         contentType = 'text/plain';
@@ -54,14 +54,14 @@ export function compression(options: CompressionOptions = {}) {
       } else {
         return this.json(data);
       }
-      
+
       responseSent = true;
       return this;
     };
 
-    ctx.json = function(data: any) {
+    ctx.json = function (data: any) {
       if (responseSent || this.res.headersSent) return this;
-      
+
       const jsonString = JSON.stringify(data);
       responseBody = Buffer.from(jsonString, 'utf8');
       contentType = 'application/json';
@@ -74,7 +74,7 @@ export function compression(options: CompressionOptions = {}) {
     if (responseSent && responseBody) {
       const body: Buffer = responseBody;
       const bodyLength = body.length;
-      
+
       if (bodyLength < threshold) {
         if (!ctx.res.headersSent) {
           if (contentType) {
@@ -89,28 +89,26 @@ export function compression(options: CompressionOptions = {}) {
         if (contentType) {
           ctx.res.setHeader('Content-Type', contentType);
         }
-        
+
         const existingVary = ctx.res.getHeader('Vary');
-        const varyHeader = existingVary 
-          ? `${existingVary}, Accept-Encoding`
-          : 'Accept-Encoding';
+        const varyHeader = existingVary ? `${existingVary}, Accept-Encoding` : 'Accept-Encoding';
         ctx.res.setHeader('Vary', varyHeader);
         ctx.res.setHeader('Content-Encoding', encoding);
 
         try {
           const compressed = await new Promise<Buffer>((resolve, reject) => {
             const compressedChunks: Buffer[] = [];
-            
+
             compressor.on('data', (chunk: Buffer) => {
               compressedChunks.push(chunk);
             });
-            
+
             compressor.on('end', () => {
               resolve(Buffer.concat(compressedChunks));
             });
-            
+
             compressor.on('error', reject);
-            
+
             compressor.write(body);
             compressor.end();
           });
@@ -129,14 +127,14 @@ export function compression(options: CompressionOptions = {}) {
 
 function defaultFilter(req: IncomingMessage): boolean {
   const contentType = req.headers['content-type'] || '';
-  
+
   if (contentType.includes('gzip') || contentType.includes('deflate') || contentType.includes('br')) {
     return false;
   }
-  
+
   if (contentType.includes('image/') || contentType.includes('video/') || contentType.includes('audio/')) {
     return false;
   }
-  
+
   return true;
 }

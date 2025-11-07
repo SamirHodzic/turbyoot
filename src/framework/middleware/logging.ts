@@ -1,7 +1,6 @@
 import { Context } from '../types.js';
 import { randomBytes } from 'crypto';
 
-// Request ID middleware
 export function requestId() {
   return async (ctx: Context, next: () => Promise<void>) => {
     const requestId = randomBytes(16).toString('hex');
@@ -11,12 +10,11 @@ export function requestId() {
   };
 }
 
-// Logger middleware
 export function logger() {
   return async (ctx: Context, next: () => Promise<void>) => {
     const start = Date.now();
     let status = 200;
-    
+
     try {
       await next();
       status = ctx.res.statusCode;

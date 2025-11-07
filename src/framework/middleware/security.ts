@@ -16,34 +16,26 @@ export function helmet(options: SecurityOptions = {}) {
       originAgentCluster = true,
       permittedCrossDomainPolicies = true,
       referrerPolicy = true,
-      xssFilter = true
+      xssFilter = true,
     } = options;
 
     if (contentSecurityPolicy) {
-      const csp = typeof contentSecurityPolicy === 'string' 
-        ? contentSecurityPolicy 
-        : "default-src 'self'";
+      const csp = typeof contentSecurityPolicy === 'string' ? contentSecurityPolicy : "default-src 'self'";
       ctx.res.setHeader('Content-Security-Policy', csp);
     }
 
     if (crossOriginEmbedderPolicy) {
-      const coep = typeof crossOriginEmbedderPolicy === 'string'
-        ? crossOriginEmbedderPolicy
-        : 'require-corp';
+      const coep = typeof crossOriginEmbedderPolicy === 'string' ? crossOriginEmbedderPolicy : 'require-corp';
       ctx.res.setHeader('Cross-Origin-Embedder-Policy', coep);
     }
 
     if (crossOriginOpenerPolicy) {
-      const coop = typeof crossOriginOpenerPolicy === 'string'
-        ? crossOriginOpenerPolicy
-        : 'same-origin';
+      const coop = typeof crossOriginOpenerPolicy === 'string' ? crossOriginOpenerPolicy : 'same-origin';
       ctx.res.setHeader('Cross-Origin-Opener-Policy', coop);
     }
 
     if (crossOriginResourcePolicy) {
-      const corp = typeof crossOriginResourcePolicy === 'string'
-        ? crossOriginResourcePolicy
-        : 'same-origin';
+      const corp = typeof crossOriginResourcePolicy === 'string' ? crossOriginResourcePolicy : 'same-origin';
       ctx.res.setHeader('Cross-Origin-Resource-Policy', corp);
     }
 
@@ -62,7 +54,9 @@ export function helmet(options: SecurityOptions = {}) {
 
     if (hsts) {
       const hstsOptions = typeof hsts === 'object' ? hsts : { maxAge: 31536000 };
-      const hstsValue = `max-age=${hstsOptions.maxAge}${hstsOptions.includeSubDomains ? '; includeSubDomains' : ''}${hstsOptions.preload ? '; preload' : ''}`;
+      const hstsValue = `max-age=${hstsOptions.maxAge}${hstsOptions.includeSubDomains ? '; includeSubDomains' : ''}${
+        hstsOptions.preload ? '; preload' : ''
+      }`;
       ctx.res.setHeader('Strict-Transport-Security', hstsValue);
     }
 
@@ -79,16 +73,12 @@ export function helmet(options: SecurityOptions = {}) {
     }
 
     if (permittedCrossDomainPolicies) {
-      const policy = typeof permittedCrossDomainPolicies === 'string'
-        ? permittedCrossDomainPolicies
-        : 'none';
+      const policy = typeof permittedCrossDomainPolicies === 'string' ? permittedCrossDomainPolicies : 'none';
       ctx.res.setHeader('X-Permitted-Cross-Domain-Policies', policy);
     }
 
     if (referrerPolicy) {
-      const policy = typeof referrerPolicy === 'string'
-        ? referrerPolicy
-        : 'no-referrer';
+      const policy = typeof referrerPolicy === 'string' ? referrerPolicy : 'no-referrer';
       ctx.res.setHeader('Referrer-Policy', policy);
     }
 
@@ -100,16 +90,18 @@ export function helmet(options: SecurityOptions = {}) {
   };
 }
 
-export function cors(options: {
-  origin?: string | string[] | ((origin: string) => boolean);
-  methods?: string | string[];
-  allowedHeaders?: string | string[];
-  exposedHeaders?: string | string[];
-  credentials?: boolean;
-  maxAge?: number;
-  preflightContinue?: boolean;
-  optionsSuccessStatus?: number;
-} = {}) {
+export function cors(
+  options: {
+    origin?: string | string[] | ((origin: string) => boolean);
+    methods?: string | string[];
+    allowedHeaders?: string | string[];
+    exposedHeaders?: string | string[];
+    credentials?: boolean;
+    maxAge?: number;
+    preflightContinue?: boolean;
+    optionsSuccessStatus?: number;
+  } = {},
+) {
   const {
     origin = '*',
     methods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
@@ -118,12 +110,12 @@ export function cors(options: {
     credentials = false,
     maxAge = 86400,
     preflightContinue = false,
-    optionsSuccessStatus = 204
+    optionsSuccessStatus = 204,
   } = options;
 
   return async (ctx: Context, next: () => Promise<void>) => {
     const reqOrigin = ctx.req.headers.origin;
-    
+
     if (origin === '*') {
       ctx.res.setHeader('Access-Control-Allow-Origin', '*');
     } else if (typeof origin === 'function') {
@@ -148,11 +140,17 @@ export function cors(options: {
 
     if (ctx.req.method === 'OPTIONS') {
       ctx.res.setHeader('Access-Control-Allow-Methods', Array.isArray(methods) ? methods.join(', ') : methods);
-      ctx.res.setHeader('Access-Control-Allow-Headers', Array.isArray(allowedHeaders) ? allowedHeaders.join(', ') : allowedHeaders);
+      ctx.res.setHeader(
+        'Access-Control-Allow-Headers',
+        Array.isArray(allowedHeaders) ? allowedHeaders.join(', ') : allowedHeaders,
+      );
       ctx.res.setHeader('Access-Control-Max-Age', maxAge.toString());
-      
+
       if (exposedHeaders.length > 0) {
-        ctx.res.setHeader('Access-Control-Expose-Headers', Array.isArray(exposedHeaders) ? exposedHeaders.join(', ') : exposedHeaders);
+        ctx.res.setHeader(
+          'Access-Control-Expose-Headers',
+          Array.isArray(exposedHeaders) ? exposedHeaders.join(', ') : exposedHeaders,
+        );
       }
 
       if (!preflightContinue) {
@@ -187,7 +185,7 @@ export function rateLimit(options: RateLimitOptions) {
     }
 
     const current = requests.get(key);
-    
+
     if (!current) {
       requests.set(key, { count: 1, resetTime: now });
     } else if (current.resetTime < windowStart) {
