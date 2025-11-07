@@ -1,10 +1,10 @@
 # Turbyoot
 
-A modern, intuitive Node.js web framework that makes building APIs simple and enjoyable. Turbyoot combines the best of Express.js with enhanced features like fluent APIs, resource routing, and built-in TypeScript support.
+A modern, intuitive Node.js web framework that makes building APIs simple and enjoyable. Turbyoot features fluent APIs, resource routing, and built-in TypeScript support.
 
 ## Features
 
-- **Fluent API** - Chainable, intuitive syntax that's more readable than Express
+- **Fluent API** - Chainable, intuitive syntax for clean and readable code
 - **Resource Routing** - Automatic CRUD routes with custom handlers and filtering
 - **Grouped Routes** - Organize routes with prefixes and shared middleware
 - **Plugin System** - Extend functionality with a clean plugin architecture
@@ -30,7 +30,7 @@ import { Turbyoot } from 'turbyoot';
 
 const app = new Turbyoot();
 
-// Traditional Express-like syntax (still works!)
+// Traditional syntax (still works!)
 app.get('/hello', (ctx) => {
   ctx.json({ message: 'Hello from Turbyoot!' });
 });
@@ -63,19 +63,11 @@ app.listen(3000, () => {
 
 ## Enhanced Features
 
-### 1. Fluent API - More Intuitive Than Express
+### 1. Fluent API - Clean and Chainable
 
 The fluent API provides a chainable, readable syntax that makes your code more expressive:
 
 ```typescript
-// Instead of this Express-style code:
-app.get('/api/users', authMiddleware, (req, res) => {
-  res.json({ users: [] });
-});
-app.post('/api/users', authMiddleware, (req, res) => {
-  res.status(201).json({ user: req.body });
-});
-
 // Write this clean, chainable code:
 app.route()
   .use(authMiddleware)
@@ -246,7 +238,7 @@ Turbyoot provides organized imports for better developer experience:
 import { Turbyoot, healthCheck, Router, HttpError, errorHandler } from 'turbyoot/core';
 
 // Middleware
-import { cors, helmet, rateLimit, validate, requestId, compression, timeout } from 'turbyoot/middleware';
+import { cors, helmet, rateLimit, validate, requestId, compression, timeout, serveStatic } from 'turbyoot/middleware';
 
 // Utilities
 import { initCache, getCache, cacheWithStore, invalidateCache } from 'turbyoot/utils';
@@ -284,7 +276,7 @@ app.listen(3000);
 
 ### Enhanced Context Object
 
-The context object provides both traditional Express-like methods and enhanced intuitive methods:
+The context object provides both traditional response methods and enhanced intuitive methods:
 
 ```typescript
 app.get('/users/:id', (ctx) => {
@@ -544,6 +536,94 @@ app.use(compression({
   level: 6 // Compression level (1-9)
 }));
 ```
+
+### Static File Serving
+
+Serve static files from a directory with caching, security features, and automatic MIME type detection:
+
+```typescript
+import { Turbyoot } from 'turbyoot';
+
+const app = new Turbyoot();
+
+// Basic static file serving
+app.use(app.static('./public', {
+  prefix: '/static'  // Files accessible at /static/*
+}));
+
+// Advanced configuration with all options
+app.use(app.static('./public', {
+  prefix: '/static',           // URL prefix (default: '/static')
+  maxAge: 3600,                // Cache for 1 hour (default: 0 - no cache)
+  etag: true,                  // Enable ETag headers (default: true)
+  lastModified: true,          // Enable Last-Modified headers (default: true)
+  index: 'index.html',         // Default file for directories (default: ['index.html'])
+  dotfiles: 'ignore'           // Handle dotfiles: 'allow' | 'deny' | 'ignore' (default: 'ignore')
+}));
+
+// Files in ./public/styles.css will be served at /static/styles.css
+// Files in ./public/images/logo.png will be served at /static/images/logo.png
+```
+
+**Options:**
+- `prefix` - URL prefix for static files (default: `/static`)
+- `maxAge` - Cache-Control max-age in seconds (default: `0` - no cache)
+- `etag` - Enable ETag headers for cache validation (default: `true`)
+- `lastModified` - Enable Last-Modified headers (default: `true`)
+- `index` - Default file(s) to serve for directories (default: `['index.html']`)
+- `dotfiles` - How to handle dotfiles: `'allow'`, `'deny'`, or `'ignore'` (default: `'ignore'`)
+
+**Examples:**
+
+```typescript
+// Serve assets with long-term caching
+app.use(app.static('./assets', {
+  prefix: '/assets',
+  maxAge: 31536000,  // 1 year
+  etag: true,
+  lastModified: true
+}));
+
+// Serve multiple static directories
+app.use(app.static('./public', { prefix: '/static' }));
+app.use(app.static('./uploads', { prefix: '/files' }));
+
+// Serve with custom index files
+app.use(app.static('./docs', {
+  prefix: '/docs',
+  index: ['index.html', 'index.htm', 'readme.html']
+}));
+
+// Allow dotfiles (e.g., .htaccess, .env.example)
+app.use(app.static('./config', {
+  prefix: '/config',
+  dotfiles: 'allow'
+}));
+
+// Deny dotfiles for security
+app.use(app.static('./public', {
+  prefix: '/static',
+  dotfiles: 'deny'
+}));
+```
+
+**Features:**
+- ✅ Automatic MIME type detection (HTML, CSS, JS, images, fonts, etc.)
+- ✅ Path traversal protection (blocks `..` and `~`)
+- ✅ Directory index support
+- ✅ Conditional requests (304 Not Modified)
+- ✅ ETag and Last-Modified headers
+- ✅ Cache-Control headers
+- ✅ HEAD request support
+- ✅ Security: dotfile handling options
+
+**Features:**
+- Automatic MIME type detection
+- Path traversal protection (blocks `..` and `~`)
+- Directory index support
+- 304 Not Modified responses
+- HEAD request support
+- Security: Only serves files within the specified directory
 
 ### Request Timeout
 
@@ -934,7 +1014,7 @@ app.get('/search', (ctx) => {
 
 ```typescript
 class Turbyoot {
-  // Traditional HTTP Methods (Express-like)
+  // Traditional HTTP Methods
   get(path: string, handler: RouteHandler): void;
   get(path: string, middleware: Middleware, handler: RouteHandler): void;
   post(path: string, handler: RouteHandler): void;
@@ -1014,7 +1094,7 @@ interface Context {
   statusCode: number;
   state: Record<string, any>;
   
-  // Traditional response methods (Express-like)
+  // Traditional response methods
   json(data: any): Context;
   status(code: number): Context;
   redirect(url: string, status?: number): void;
@@ -1046,82 +1126,16 @@ interface Context {
 }
 ```
 
-## 🆚 Why Turbyoot Over Express.js?
+## Key Features
 
-| Feature | Express.js | Turbyoot |
-|---------|------------|----------|
-| **Setup** | `const app = express()` | `const app = new Turbyoot()` |
-| **Route Definition** | Verbose, repetitive | Fluent, chainable |
-| **Resource Routes** | Manual CRUD setup | Automatic with `app.resource()` |
-| **Response Methods** | `res.status(200).json()` | `ctx.ok()` |
-| **Route Organization** | Manual grouping | `app.group()` with shared middleware |
-| **TypeScript** | Additional setup required | Built-in, zero config |
-| **Plugin System** | Manual middleware | Structured `app.plugin()` |
-| **Error Handling** | Manual setup | Built-in with `HttpError` |
-| **Validation** | External libraries | Built-in with `validate()` |
-| **Caching** | External libraries | Built-in with `cache()` |
-| **Health Checks** | Manual implementation | Built-in with `healthCheck()` |
+Turbyoot provides a modern, type-safe approach to building web APIs:
 
-### Code Comparison
-
-**Express.js:**
-```javascript
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-
-const app = express();
-
-// Global middleware
-app.use(cors());
-app.use(helmet());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
-
-// Manual CRUD routes
-app.get('/api/users', authMiddleware, (req, res) => {
-  res.status(200).json({ users: [] });
-});
-app.post('/api/users', authMiddleware, (req, res) => {
-  res.status(201).json({ user: req.body });
-});
-app.get('/api/users/:id', authMiddleware, (req, res) => {
-  res.status(200).json({ user: { id: req.params.id } });
-});
-app.put('/api/users/:id', authMiddleware, (req, res) => {
-  res.status(200).json({ user: { id: req.params.id, ...req.body } });
-});
-app.delete('/api/users/:id', authMiddleware, (req, res) => {
-  res.status(204).send();
-});
-```
-
-**Turbyoot:**
-```typescript
-import { Turbyoot } from 'turbyoot';
-
-const app = new Turbyoot();
-
-// Global middleware
-app.use(cors());
-app.use(helmet());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
-
-// Automatic CRUD routes
-app.resource('users', {
-  prefix: '/api',
-  middleware: [authMiddleware],
-  handlers: {
-    index: (ctx) => ctx.ok({ users: [] }),
-    create: (ctx) => ctx.created({ user: ctx.body }),
-    show: (ctx) => ctx.ok({ user: { id: ctx.params.id } }),
-    update: (ctx) => ctx.ok({ user: { id: ctx.params.id, ...ctx.body } }),
-    destroy: (ctx) => ctx.noContent()
-  }
-});
-```
-
-**Result:** 50% less code, more readable, type-safe, and maintainable!
+- **Fluent API** - Chainable syntax for cleaner, more readable code
+- **Resource Routing** - Automatic CRUD route generation with minimal boilerplate
+- **Built-in Features** - Security, validation, caching, and health checks included
+- **TypeScript First** - Full type safety out of the box, zero configuration required
+- **Plugin System** - Extensible architecture for adding custom functionality
+- **Developer Experience** - Intuitive context methods and comprehensive error handling
 
 ## 🤝 Contributing
 
@@ -1133,7 +1147,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-Inspired by Express.js and other modern web frameworks, built with ❤️ for the Node.js community.
+Built with ❤️ for the Node.js community.
 
 ---
 

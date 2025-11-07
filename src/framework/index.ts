@@ -1,21 +1,13 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import {
-  Context,
-  Middleware,
-  RouteHandler,
-  CompiledRoute,
-  FluentRoute,
-  ResourceOptions,
-  Plugin,
-  PluginOptions,
-} from './types.js';
+import { Context, Middleware, RouteHandler, CompiledRoute, FluentRoute, ResourceOptions, Plugin } from './types.js';
 import { createContext } from './context.js';
 import { compilePath, matchPath } from './utils/path.js';
 import { parseBody } from './utils/body.js';
 import { parseQueryParams } from './utils/query.js';
-import { Router } from './router.js';
-import { errorHandler, HttpError } from './errors.js';
-import { FluentRouter, createResource, PluginManager } from './fluent.js';
+import { errorHandler } from './errors.js';
+import { FluentRouter, PluginManager } from './fluent.js';
+import { serveStatic } from './middleware/static.js';
+import { StaticOptions } from './types.js';
 
 export class Turbyoot {
   private routes: CompiledRoute[] = [];
@@ -87,41 +79,8 @@ export class Turbyoot {
     this.add('HEAD', path, handlerOrMiddleware, finalHandler);
   }
 
-  static(
-    directory: string,
-    options: {
-      prefix?: string;
-      maxAge?: number;
-      etag?: boolean;
-      lastModified?: boolean;
-    } = {},
-  ): Middleware {
-    const { prefix = '/static', maxAge = 0, etag = true, lastModified = true } = options;
-
-    return async (ctx: Context, next: () => Promise<void>) => {
-      if (ctx.req.method !== 'GET' && ctx.req.method !== 'HEAD') {
-        await next();
-        return;
-      }
-
-      const url = ctx.req.url || '';
-      if (!url.startsWith(prefix)) {
-        await next();
-        return;
-      }
-
-      const filePath = url.slice(prefix.length);
-      if (filePath.includes('..') || filePath.includes('~')) {
-        ctx.statusCode = 403;
-        ctx.res.statusCode = 403;
-        ctx.json({ error: 'Forbidden', status: 403 });
-        return;
-      }
-
-      ctx.statusCode = 404;
-      ctx.res.statusCode = 404;
-      ctx.json({ error: 'File not found', status: 404 });
-    };
+  static(directory: string, options: StaticOptions = {}): Middleware {
+    return serveStatic(directory, options);
   }
 
   healthCheck(
@@ -214,7 +173,7 @@ export class Turbyoot {
               routeMiddleware.push(...route.middleware);
             }
           }
-          
+
           matchedRoute = {
             method: 'OPTIONS',
             path: pathname,
@@ -270,7 +229,6 @@ export class Turbyoot {
     }
   }
 
-  // ========================================
   route(): FluentRoute {
     const router = new FluentRouter(this);
     return router;

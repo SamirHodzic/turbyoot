@@ -23,7 +23,6 @@ export class FluentRouter implements FluentRoute {
     };
     this.routes.push(route);
 
-    // Automatically register with the app
     if (this.middleware.length > 0) {
       this.app.get(path, this.middleware[0], handler);
     } else {
@@ -150,7 +149,6 @@ export class FluentRouter implements FluentRoute {
     const { only = [], except = [], middleware: resourceMiddleware = [], prefix = '', handlers = {} } = options;
     const basePath = prefix ? `${prefix}/${name}` : name;
 
-    // Define standard REST routes
     const routes = [
       {
         method: 'GET',
@@ -190,18 +188,15 @@ export class FluentRouter implements FluentRoute {
       },
     ];
 
-    // Filter routes based on only/except options
     const filteredRoutes = routes.filter((route) => {
       if (only.length > 0) return only.includes(route.name);
       if (except.length > 0) return !except.includes(route.name);
       return true;
     });
 
-    // Store routes instead of immediately adding them
     for (const route of filteredRoutes) {
       const allMiddleware = [...this.middleware, ...resourceMiddleware];
 
-      // Use custom handler if provided, otherwise use default REST handlers
       const customHandler = handlers[route.handler as keyof typeof handlers];
       const handler =
         customHandler ||
@@ -249,7 +244,6 @@ export class FluentRouter implements FluentRoute {
     const groupRouter = new FluentRouter(this.app);
     groupRouter.middleware = [...this.middleware];
 
-    // Apply prefix to all routes in the group
     const originalMethods = ['get', 'post', 'put', 'del', 'patch', 'options', 'head'];
     for (const method of originalMethods) {
       const originalMethod = (groupRouter as any)[method];
@@ -262,7 +256,6 @@ export class FluentRouter implements FluentRoute {
       };
     }
 
-    // Also handle resource method
     const originalResource = groupRouter.resource.bind(groupRouter);
     groupRouter.resource = (name: string, options: ResourceOptions = {}) => {
       const prefixedOptions = {
@@ -283,7 +276,6 @@ export class FluentRouter implements FluentRoute {
     return this;
   }
 
-  // Get all routes for external processing
   getRoutes() {
     return this.routes;
   }
@@ -318,21 +310,17 @@ export class EnhancedTurbyoot {
   private pluginManager = new PluginManager();
 
   constructor(app?: any) {
-    // Accept an existing app instance or create a new one
     if (app) {
       this.app = app;
     } else {
-      // We'll need to initialize this in the enhanced-server
       this.app = null;
     }
   }
 
-  // Method to set the app instance (used by enhanced-server)
   setApp(app: any) {
     this.app = app;
   }
 
-  // Delegate all Turbyoot methods to the internal app
   use(middleware: Middleware): EnhancedTurbyoot {
     this.app.use(middleware);
     return this;
@@ -406,25 +394,21 @@ export class EnhancedTurbyoot {
     this.app.close();
   }
 
-  // Fluent API entry point
   route(): FluentRoute {
     return new FluentRouter(this.app);
   }
 
-  // Resource-based routing
   resource(name: string, options: ResourceOptions = {}): FluentRoute {
     const router = new FluentRouter(this.app);
     router.resource(name, options);
     return router;
   }
 
-  // Group routing
   group(prefix: string, callback: (router: FluentRoute) => void): void {
     const router = new FluentRouter(this.app);
     router.group(prefix, callback);
   }
 
-  // Plugin system
   plugin(plugin: any): EnhancedTurbyoot {
     this.pluginManager.register(plugin);
     return this;

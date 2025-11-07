@@ -1,7 +1,13 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Context } from './types.js';
 
-export function createContext(req: IncomingMessage, res: ServerResponse, params: Record<string, string> = {}, query: Record<string, any> = {}, body: any = null): Context {
+export function createContext(
+  req: IncomingMessage,
+  res: ServerResponse,
+  params: Record<string, string> = {},
+  query: Record<string, any> = {},
+  body: any = null,
+): Context {
   const context: Context = {
     req,
     res,
@@ -10,7 +16,7 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
     body,
     statusCode: 200,
     state: {},
-    
+
     json(data: any) {
       if (!this.res.headersSent) {
         this.res.setHeader('Content-Type', 'application/json');
@@ -18,7 +24,7 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
       }
       return this;
     },
-    
+
     status(code: number) {
       this.statusCode = code;
       if (!this.res.headersSent) {
@@ -26,7 +32,7 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
       }
       return this;
     },
-    
+
     redirect(url: string, status: number = 302) {
       if (!this.res.headersSent) {
         this.res.statusCode = status;
@@ -35,14 +41,14 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
       }
       return this;
     },
-    
+
     type(contentType: string) {
       if (!this.res.headersSent) {
         this.res.setHeader('Content-Type', contentType);
       }
       return this;
     },
-    
+
     send(data: any) {
       if (this.res.headersSent) return this;
       if (typeof data === 'string') {
@@ -172,7 +178,9 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
 
     cookie(name: string, value: string, options: any = {}) {
       if (!this.res.headersSent) {
-        const cookieString = `${name}=${value}${options.maxAge ? `; Max-Age=${options.maxAge}` : ''}${options.httpOnly ? '; HttpOnly' : ''}${options.secure ? '; Secure' : ''}${options.sameSite ? `; SameSite=${options.sameSite}` : ''}`;
+        const cookieString = `${name}=${value}${options.maxAge ? `; Max-Age=${options.maxAge}` : ''}${
+          options.httpOnly ? '; HttpOnly' : ''
+        }${options.secure ? '; Secure' : ''}${options.sameSite ? `; SameSite=${options.sameSite}` : ''}`;
         this.res.setHeader('Set-Cookie', cookieString);
       }
       return this;
@@ -180,7 +188,9 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
 
     clearCookie(name: string, options: any = {}) {
       if (!this.res.headersSent) {
-        const cookieString = `${name}=; Max-Age=0${options.httpOnly ? '; HttpOnly' : ''}${options.secure ? '; Secure' : ''}${options.sameSite ? `; SameSite=${options.sameSite}` : ''}`;
+        const cookieString = `${name}=; Max-Age=0${options.httpOnly ? '; HttpOnly' : ''}${
+          options.secure ? '; Secure' : ''
+        }${options.sameSite ? `; SameSite=${options.sameSite}` : ''}`;
         this.res.setHeader('Set-Cookie', cookieString);
       }
       return this;
@@ -203,8 +213,8 @@ export function createContext(req: IncomingMessage, res: ServerResponse, params:
 
     get(field: string): string | undefined {
       return this.req.headers[field.toLowerCase()] as string;
-    }
+    },
   };
-  
+
   return context;
 }

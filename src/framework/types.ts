@@ -175,6 +175,15 @@ export interface CompressionOptions {
   filter?: (req: IncomingMessage, res: ServerResponse) => boolean;
 }
 
+export interface StaticOptions {
+  prefix?: string;
+  maxAge?: number;
+  etag?: boolean;
+  lastModified?: boolean;
+  index?: string | string[];
+  dotfiles?: 'allow' | 'deny' | 'ignore';
+}
+
 export interface QueryParseOptions {
   parseNumbers?: boolean;
   parseBooleans?: boolean;

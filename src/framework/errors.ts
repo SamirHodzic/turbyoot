@@ -9,7 +9,7 @@ export function errorHandler() {
         if (err instanceof HttpError) {
           ctx.statusCode = err.status;
           ctx.res.statusCode = err.status;
-          
+
           if (err.expose) {
             ctx.json({ error: err.message, status: err.status });
           } else {
