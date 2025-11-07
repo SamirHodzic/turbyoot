@@ -302,54 +302,6 @@ export class Turbyoot {
   }
 }
 
-export function healthCheck(
-  checks: Array<{
-    name: string;
-    check: () => Promise<boolean> | boolean;
-    timeout?: number;
-  }> = [],
-) {
-  return async (ctx: Context) => {
-    const startTime = Date.now();
-    const results: Record<string, { status: 'pass' | 'fail'; responseTime?: number; error?: string }> = {};
-
-    for (const check of checks) {
-      const checkStart = Date.now();
-      try {
-        const timeout = check.timeout || 5000;
-        const timeoutPromise = new Promise<boolean>((_, reject) => {
-          setTimeout(() => reject(new Error('Check timeout')), timeout);
-        });
-
-        const result = await Promise.race([Promise.resolve(check.check()), timeoutPromise]);
-
-        results[check.name] = {
-          status: result ? 'pass' : 'fail',
-          responseTime: Date.now() - checkStart,
-        };
-      } catch (error) {
-        results[check.name] = {
-          status: 'fail',
-          responseTime: Date.now() - checkStart,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        };
-      }
-    }
-
-    const allPassed = Object.values(results).every((result) => result.status === 'pass');
-    const status = allPassed ? 'healthy' : 'unhealthy';
-
-    ctx.statusCode = allPassed ? 200 : 503;
-    ctx.res.statusCode = allPassed ? 200 : 503;
-    ctx.json({
-      status,
-      timestamp: new Date().toISOString(),
-      uptime: Date.now() - startTime,
-      checks: results,
-    });
-  };
-}
-
 export * from './types.js';
 export * from './context.js';
 export * from './router.js';

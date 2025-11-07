@@ -235,7 +235,7 @@ Turbyoot provides organized imports for better developer experience:
 
 ```typescript
 // Core framework
-import { Turbyoot, healthCheck, Router, HttpError, errorHandler } from 'turbyoot/core';
+import { Turbyoot, Router, HttpError, errorHandler } from 'turbyoot/core';
 
 // Middleware
 import { cors, helmet, rateLimit, validate, requestId, compression, timeout, serveStatic } from 'turbyoot/middleware';
@@ -652,9 +652,7 @@ app.use(logger());    // Log all requests
 ### Health Checks
 
 ```typescript
-import { healthCheck } from 'turbyoot';
-
-app.get('/health', healthCheck([
+app.get('/health', app.healthCheck([
   {
     name: 'database',
     check: async () => {
