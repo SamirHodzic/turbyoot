@@ -1,6 +1,5 @@
 import { CacheAdapter, CacheStats } from '../types.js';
 
-// Memory cache adapter
 export class MemoryCacheAdapter implements CacheAdapter {
   private cache = new Map<string, { value: string; expires?: number }>();
   private stats: CacheStats = {
@@ -9,32 +8,32 @@ export class MemoryCacheAdapter implements CacheAdapter {
     sets: 0,
     dels: 0,
     size: 0,
-    hitRate: 0
+    hitRate: 0,
   };
 
   async get(key: string): Promise<string | null> {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       this.stats.misses++;
       this.updateHitRate();
       return null;
     }
-    
+
     if (item.expires && Date.now() > item.expires) {
       this.cache.delete(key);
       this.stats.misses++;
       this.updateHitRate();
       return null;
     }
-    
+
     this.stats.hits++;
     this.updateHitRate();
     return item.value;
   }
 
   async set(key: string, value: string, ttl?: number): Promise<void> {
-    const expires = ttl ? Date.now() + (ttl * 1000) : undefined;
+    const expires = ttl ? Date.now() + ttl * 1000 : undefined;
     this.cache.set(key, { value, expires });
     this.stats.sets++;
   }
@@ -52,7 +51,7 @@ export class MemoryCacheAdapter implements CacheAdapter {
   async expire(key: string, ttl: number): Promise<void> {
     const item = this.cache.get(key);
     if (item) {
-      item.expires = Date.now() + (ttl * 1000);
+      item.expires = Date.now() + ttl * 1000;
     }
   }
 
@@ -65,7 +64,7 @@ export class MemoryCacheAdapter implements CacheAdapter {
     const keys = Array.from(this.cache.keys());
     if (pattern) {
       const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-      return keys.filter(key => regex.test(key));
+      return keys.filter((key) => regex.test(key));
     }
     return keys;
   }
@@ -92,7 +91,6 @@ export class MemoryCacheAdapter implements CacheAdapter {
   }
 }
 
-// Redis cache adapter
 export class RedisCacheAdapter implements CacheAdapter {
   private redis: any;
 
@@ -141,7 +139,6 @@ export class RedisCacheAdapter implements CacheAdapter {
   }
 }
 
-// Cache manager
 export class CacheManager {
   private adapter: CacheAdapter;
   private keyPrefix: string;
@@ -192,12 +189,11 @@ export class CacheManager {
     if (customKey) {
       return typeof customKey === 'function' ? customKey(ctx) : customKey;
     }
-    
+
     return `${ctx.req.method}:${ctx.req.url}`;
   }
 }
 
-// Global cache instance
 let cacheManager: CacheManager | null = null;
 
 export function initCache(adapter?: CacheAdapter, keyPrefix?: string): void {

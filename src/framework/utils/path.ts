@@ -7,21 +7,24 @@ export function compilePath(path: string): { regex: RegExp; paramNames: string[]
       return '([^\\/]+)';
     })
     .replace(/\*/g, '(.*)');
-  
+
   const regex = new RegExp(`^${pattern}$`);
   return { regex, paramNames };
 }
 
-export function matchPath(compiledPath: { regex: RegExp; paramNames: string[] }, url: string): { match: boolean; params: Record<string, string> } {
+export function matchPath(
+  compiledPath: { regex: RegExp; paramNames: string[] },
+  url: string,
+): { match: boolean; params: Record<string, string> } {
   const match = url.match(compiledPath.regex);
   if (!match) {
     return { match: false, params: {} };
   }
-  
+
   const params: Record<string, string> = {};
   compiledPath.paramNames.forEach((name, index) => {
     params[name] = match[index + 1];
   });
-  
+
   return { match: true, params };
 }

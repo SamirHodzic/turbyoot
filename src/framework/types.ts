@@ -185,43 +185,22 @@ export interface QueryParseOptions {
   allowPrototypes?: boolean;
   plainObjects?: boolean;
   allowDots?: boolean;
-  charset?: string;
   charsetSentinel?: boolean;
   interpretNumericEntities?: boolean;
   delimiter?: string | RegExp;
   strictNullHandling?: boolean;
   skipNulls?: boolean;
-  encodeValuesOnly?: boolean;
-  sort?: (a: string, b: string) => number;
   decoder?: (str: string, defaultDecoder: (str: string) => string) => string;
   ignoreQueryPrefix?: boolean;
   parseValues?: boolean;
   sortFn?: (a: string, b: string) => number;
-  format?: string;
-  formatter?: any;
-  validate?: any;
+  validate?: (key: string, value: any) => boolean;
   comma?: boolean;
   allowEmptyArrays?: boolean;
-  duplicates?: string;
+  duplicates?: 'combine' | 'first' | 'last';
   allowSparse?: boolean;
-  arrayFormat?: string;
+  arrayFormat?: 'indices' | 'brackets' | 'repeat' | 'comma';
   arrayFormatSeparator?: string;
-  serializeDate?: any;
-  serialize?: any;
-  serializeParams?: any;
-  serializeQueryKey?: any;
-  serializeQueryValue?: any;
-  serializeQuery?: any;
-  serializeFragment?: any;
-  serializeHash?: any;
-  serializeHost?: any;
-  serializePassword?: any;
-  serializePathname?: any;
-  serializePort?: any;
-  serializeProtocol?: any;
-  serializeSearch?: any;
-  serializeUsername?: any;
-  serializeUserinfo?: any;
 }
 
 export interface RouterOptions {
