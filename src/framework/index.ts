@@ -193,7 +193,7 @@ export class Turbyoot {
 
         let matchedRoute: CompiledRoute | null = null;
         let params: Record<string, string> = {};
-        let routesOnPath: CompiledRoute[] = [];
+        const routesOnPath: CompiledRoute[] = [];
 
         for (const route of this.routes) {
           const match = matchPath(route, pathname);

@@ -143,7 +143,7 @@ export function cacheWithStore(options: CacheOptions = {}) {
     }
 
     let responseBody = '';
-    let responseHeaders: Record<string, string> = {};
+    const responseHeaders: Record<string, string> = {};
     let responseSent = false;
     
     const originalSend = ctx.send;
@@ -187,18 +187,6 @@ export function cacheWithStore(options: CacheOptions = {}) {
         console.warn('Cache set error:', error);
       }
     }
-  };
-}
-
-export function conditional() {
-  return async (ctx: Context, next: () => Promise<void>) => {
-    const etag = ctx.req.headers['if-none-match'];
-    const lastModified = ctx.req.headers['if-modified-since'];
-    
-    if (etag || lastModified) {
-    }
-    
-    await next();
   };
 }
 

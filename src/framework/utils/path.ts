@@ -1,6 +1,6 @@
 export function compilePath(path: string): { regex: RegExp; paramNames: string[] } {
   const paramNames: string[] = [];
-  let pattern = path
+  const pattern = path
     .replace(/\//g, '\\/')
     .replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, paramName) => {
       paramNames.push(paramName);
