@@ -1,5 +1,4 @@
 import { Context, Middleware, RouteHandler, RouterOptions } from './types.js';
-import { compilePath, matchPath } from './utils/path.js';
 
 export class Router {
   private routes: Array<{ method: string; path: string; handler: RouteHandler; middleware?: Middleware[] }> = [];
@@ -46,21 +45,31 @@ export class Router {
 
   mount(app: any): void {
     for (const route of this.routes) {
-      const compiledPath = compilePath(route.path);
-      
-      app.add(route.method, route.path, async (ctx: Context) => {
-        for (const middleware of this.middleware) {
-          await middleware(ctx, async () => {});
+      const allMiddleware = [
+        ...this.middleware,
+        ...(route.middleware || []),
+      ];
+
+      const createHandler = (): RouteHandler => {
+        if (allMiddleware.length === 0) {
+          return route.handler;
         }
-        
-        if (route.middleware) {
-          for (const middleware of route.middleware) {
-            await middleware(ctx, async () => {});
-          }
-        }
-        
-        await route.handler(ctx);
-      });
+
+        return async (ctx: Context) => {
+          let middlewareIndex = 0;
+          const executeMiddleware = async (): Promise<void> => {
+            if (middlewareIndex < allMiddleware.length) {
+              const middleware = allMiddleware[middlewareIndex++];
+              await middleware(ctx, executeMiddleware);
+            } else {
+              await route.handler(ctx);
+            }
+          };
+          await executeMiddleware();
+        };
+      };
+
+      app.add(route.method, route.path, createHandler());
     }
   }
 }
