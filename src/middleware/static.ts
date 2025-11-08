@@ -43,8 +43,8 @@ export function serveStatic(
       return;
     }
 
+    const isDotfile = filePath.split(/[/\\]/).some((part) => part.startsWith('.') && part !== '.' && part !== '..');
     const normalizedPath = normalize(filePath).replace(/^\/+/, '');
-    const isDotfile = normalizedPath.split('/').some((part) => part.startsWith('.') && part !== '.' && part !== '..');
 
     if (isDotfile) {
       if (dotfiles === 'deny') {
