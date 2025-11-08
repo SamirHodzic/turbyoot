@@ -1,4 +1,4 @@
-import { Turbyoot } from './dist/framework/index.js';
+import { Turbyoot } from './dist/framework.js';
 
 const app = new Turbyoot();
 

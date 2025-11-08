@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { Turbyoot } from '../../src/framework/index.js';
+import { Turbyoot } from '../../src/framework.js';
 import { createTestApp, createMockContext, mockHandler } from '../utils/test-helpers.js';
 
 describe('Turbyoot Core', () => {

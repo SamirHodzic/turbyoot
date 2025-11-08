@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { serveStatic } from '../../src/framework/middleware/static.js';
+import { serveStatic } from '../../src/middleware/static.js';
 import { createMockContext } from '../utils/test-helpers.js';
 import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';

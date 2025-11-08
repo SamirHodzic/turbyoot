@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseBody } from '../../src/framework/utils/body.js';
+import { parseBody } from '../../src/utils/body.js';
 import { EventEmitter } from 'events';
 import { IncomingMessage } from 'http';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createContext } from '../../src/framework/context.js';
+import { createContext } from '../../src/context.js';
 import { createMockContext } from '../utils/test-helpers.js';
 import { IncomingMessage, ServerResponse } from 'http';
 

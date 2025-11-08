@@ -1,4 +1,4 @@
-export { Turbyoot } from './index.js';
+export { Turbyoot } from './framework.js';
 export { Router } from './router.js';
 export { HttpError } from './errors.js';
 export { errorHandler } from './errors.js';

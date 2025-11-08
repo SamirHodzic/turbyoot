@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { Turbyoot } from '../../src/framework/index.js';
-import { validate } from '../../src/framework/middleware/validation.js';
-import { cache, cacheWithStore } from '../../src/framework/middleware/caching.js';
-import { initCache, MemoryCacheAdapter } from '../../src/framework/utils/cache.js';
-import { auth, requireAuth, requireRole, requirePermission } from '../../src/framework/middleware/auth.js';
-import { helmet, cors, rateLimit } from '../../src/framework/middleware/security.js';
-import { timeout } from '../../src/framework/middleware/timeout.js';
+import { Turbyoot } from '../../src/framework.js';
+import { validate } from '../../src/middleware/validation.js';
+import { cache, cacheWithStore } from '../../src/middleware/caching.js';
+import { initCache, MemoryCacheAdapter } from '../../src/utils/cache.js';
+import { auth, requireAuth, requireRole, requirePermission } from '../../src/middleware/auth.js';
+import { helmet, cors, rateLimit } from '../../src/middleware/security.js';
+import { timeout } from '../../src/middleware/timeout.js';
 
 describe('Complete API Integration Tests', () => {
   let app: Turbyoot;

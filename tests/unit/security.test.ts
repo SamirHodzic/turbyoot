@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { helmet, cors, rateLimit } from '../../src/framework/middleware/security.js';
-import { Context } from '../../src/framework/types.js';
+import { helmet, cors, rateLimit } from '../../src/middleware/security.js';
+import { Context } from '../../src/types.js';
 import { createMockContext } from '../utils/test-helpers.js';
 
 describe('Security Middleware', () => {

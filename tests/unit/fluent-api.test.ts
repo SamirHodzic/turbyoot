@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createTestApp, mockHandler, mockMiddleware } from '../utils/test-helpers.js';
-import { createResource, PluginManager, EnhancedTurbyoot } from '../../src/framework/fluent.js';
+import { createResource, PluginManager, EnhancedTurbyoot } from '../../src/fluent.js';
 
 describe('Fluent API', () => {
   let app: ReturnType<typeof createTestApp>;

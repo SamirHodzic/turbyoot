@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { Turbyoot } from '../../src/framework/index.js';
+import { Turbyoot } from '../../src/framework.js';
 
 describe('Fluent API Integration Tests', () => {
   let app: Turbyoot;

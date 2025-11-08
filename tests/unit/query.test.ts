@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseQueryParams } from '../../src/framework/utils/query.js';
+import { parseQueryParams } from '../../src/utils/query.js';
 
 describe('Query Parser', () => {
   describe('Basic Parsing', () => {

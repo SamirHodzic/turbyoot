@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { Router } from '../../src/framework/router.js';
-import { Turbyoot } from '../../src/framework/index.js';
-import { Context } from '../../src/framework/types.js';
+import { Router } from '../../src/router.js';
+import { Turbyoot } from '../../src/framework.js';
+import { Context } from '../../src/types.js';
 import { mockHandler, mockMiddleware } from '../utils/test-helpers.js';
 
 describe('Router', () => {

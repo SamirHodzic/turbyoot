@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { timeout, keepAliveTimeout, configureTimeouts } from '../../src/framework/middleware/timeout.js';
+import { timeout, keepAliveTimeout, configureTimeouts } from '../../src/middleware/timeout.js';
 import { createMockContext } from '../utils/test-helpers.js';
 
 describe('Timeout Middleware', () => {

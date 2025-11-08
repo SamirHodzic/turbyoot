@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { auth, requireAuth, requireRole, requirePermission, setAuthCookie, clearAuthCookie } from '../../src/framework/middleware/auth.js';
-import { Context } from '../../src/framework/types.js';
+import { auth, requireAuth, requireRole, requirePermission, setAuthCookie, clearAuthCookie } from '../../src/middleware/auth.js';
+import { Context } from '../../src/types.js';
 import { createMockContext } from '../utils/test-helpers.js';
 
 describe('Auth Middleware', () => {

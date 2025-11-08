@@ -45,24 +45,24 @@
       "import": "./dist/framework.js"
     },
     "./core": {
-      "types": "./dist/types/framework/core.d.ts",
-      "import": "./dist/framework/core.js"
+      "types": "./dist/types/core.d.ts",
+      "import": "./dist/core.js"
     },
     "./middleware": {
-      "types": "./dist/types/framework/middleware.d.ts",
-      "import": "./dist/framework/middleware.js"
+      "types": "./dist/types/middleware.d.ts",
+      "import": "./dist/middleware.js"
     },
     "./auth": {
-      "types": "./dist/types/framework/auth.d.ts",
-      "import": "./dist/framework/auth.js"
+      "types": "./dist/types/auth.d.ts",
+      "import": "./dist/auth.js"
     },
     "./utils": {
-      "types": "./dist/types/framework/utils.d.ts",
-      "import": "./dist/framework/utils.js"
+      "types": "./dist/types/utils.d.ts",
+      "import": "./dist/utils.js"
     },
     "./types": {
-      "types": "./dist/types/framework/types.d.ts",
-      "import": "./dist/framework/types.js"
+      "types": "./dist/types/types.d.ts",
+      "import": "./dist/types.js"
     }
   },
   "files": [

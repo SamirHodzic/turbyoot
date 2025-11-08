@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { errorHandler, HttpError } from '../../src/framework/errors.js';
+import { errorHandler, HttpError } from '../../src/errors.js';
 import { createMockContext } from '../utils/test-helpers.js';
 
 describe('Error Handler', () => {

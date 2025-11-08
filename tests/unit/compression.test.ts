@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { compression } from '../../src/framework/middleware/compression.js';
+import { compression } from '../../src/middleware/compression.js';
 import { createMockContext } from '../utils/test-helpers.js';
 import { createGunzip } from 'zlib';
 

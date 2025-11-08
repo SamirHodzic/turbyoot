@@ -1,5 +1,5 @@
-import { Turbyoot } from '../../src/framework/index.js';
-import { Context } from '../../src/framework/types.js';
+import { Turbyoot } from '../../src/framework.js';
+import { Context } from '../../src/types.js';
 
 /**
  * Create a test Turbyoot instance

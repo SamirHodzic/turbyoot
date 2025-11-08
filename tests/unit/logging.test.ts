@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { requestId, logger } from '../../src/framework/middleware/logging.js';
+import { requestId, logger } from '../../src/middleware/logging.js';
 import { createMockContext } from '../utils/test-helpers.js';
 
 describe('Logging Middleware', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { validate, validateQuery, validateField } from '../../src/framework/middleware/validation.js';
+import { validate, validateQuery, validateField } from '../../src/middleware/validation.js';
 import { createMockContext } from '../utils/test-helpers.js';
 
 describe('Validation Middleware', () => {

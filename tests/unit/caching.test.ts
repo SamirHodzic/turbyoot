@@ -1,8 +1,8 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { cache, cacheWithStore, invalidateCache } from '../../src/framework/middleware/caching.js';
-import { Context } from '../../src/framework/types.js';
+import { cache, cacheWithStore, invalidateCache } from '../../src/middleware/caching.js';
+import { Context } from '../../src/types.js';
 import { createMockContext } from '../utils/test-helpers.js';
-import { initCache, getCache, getCacheStats, MemoryCacheAdapter } from '../../src/framework/utils/cache.js';
+import { initCache, getCache, getCacheStats, MemoryCacheAdapter } from '../../src/utils/cache.js';
 
 describe('Caching Middleware', () => {
   beforeEach(() => {
