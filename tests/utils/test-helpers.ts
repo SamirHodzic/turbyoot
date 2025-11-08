@@ -23,6 +23,7 @@ export function createMockContext(overrides: Partial<Context> = {}): Context {
   const mockRes = {
     statusCode: 200,
     setHeader: jest.fn(),
+    removeHeader: jest.fn(),
     writeHead: jest.fn(),
     write: jest.fn(),
     end: jest.fn(),

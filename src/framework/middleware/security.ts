@@ -138,7 +138,11 @@ export function cors(
       ctx.res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
 
-    if (ctx.req.method === 'OPTIONS') {
+    const isPreflight = ctx.req.method === 'OPTIONS' && 
+      reqOrigin && 
+      ctx.req.headers['access-control-request-method'];
+
+    if (isPreflight) {
       ctx.res.setHeader('Access-Control-Allow-Methods', Array.isArray(methods) ? methods.join(', ') : methods);
       ctx.res.setHeader(
         'Access-Control-Allow-Headers',

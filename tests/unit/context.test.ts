@@ -1,11 +1,61 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
+import { createContext } from '../../src/framework/context.js';
 import { createMockContext } from '../utils/test-helpers.js';
+import { IncomingMessage, ServerResponse } from 'http';
 
 describe('Enhanced Context', () => {
   let ctx: ReturnType<typeof createMockContext>;
 
   beforeEach(() => {
     ctx = createMockContext();
+  });
+
+  describe('createContext()', () => {
+    it('should create context with default values', () => {
+      const mockReq = {
+        headers: {},
+        on: jest.fn()
+      } as any as IncomingMessage;
+      const mockRes = {
+        setHeader: jest.fn(),
+        end: jest.fn(),
+        statusCode: 200,
+        headersSent: false
+      } as any as ServerResponse;
+
+      const context = createContext(mockReq, mockRes);
+
+      expect(context.req).toBe(mockReq);
+      expect(context.res).toBe(mockRes);
+      expect(context.params).toEqual({});
+      expect(context.query).toEqual({});
+      expect(context.body).toBeNull();
+      expect(context.statusCode).toBe(200);
+      expect(context.state).toEqual({});
+    });
+
+    it('should create context with custom params, query, and body', () => {
+      const mockReq = {
+        headers: {},
+        on: jest.fn()
+      } as any as IncomingMessage;
+      const mockRes = {
+        setHeader: jest.fn(),
+        end: jest.fn(),
+        statusCode: 200,
+        headersSent: false
+      } as any as ServerResponse;
+
+      const params = { id: '123' };
+      const query = { page: '1' };
+      const body = { name: 'John' };
+
+      const context = createContext(mockReq, mockRes, params, query, body);
+
+      expect(context.params).toEqual(params);
+      expect(context.query).toEqual(query);
+      expect(context.body).toEqual(body);
+    });
   });
 
   describe('Enhanced Response Methods', () => {

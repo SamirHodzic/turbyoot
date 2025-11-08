@@ -1,12 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { Turbyoot } from '../../src/framework/index.js';
 import { validate } from '../../src/framework/middleware/validation.js';
+import { cache, cacheWithStore } from '../../src/framework/middleware/caching.js';
+import { initCache, MemoryCacheAdapter } from '../../src/framework/utils/cache.js';
+import { auth, requireAuth, requireRole, requirePermission } from '../../src/framework/middleware/auth.js';
+import { helmet, cors, rateLimit } from '../../src/framework/middleware/security.js';
+import { timeout } from '../../src/framework/middleware/timeout.js';
 
 describe('Complete API Integration Tests', () => {
   let app: Turbyoot;
   let baseUrl: string;
 
   beforeAll(async () => {
+    initCache(new MemoryCacheAdapter());
     app = new Turbyoot();
     
     // Add global middleware
@@ -14,6 +20,23 @@ describe('Complete API Integration Tests', () => {
       ctx.state.requestId = Math.random().toString(36).substr(2, 9);
       return next();
     });
+
+    // Setup auth middleware
+    const mockUserResolver = async (token: string) => {
+      if (token === 'valid-token') {
+        return { id: '1', name: 'Test User', roles: ['user'], permissions: ['read:own'] };
+      }
+      if (token === 'admin-token') {
+        return { id: '2', name: 'Admin User', roles: ['admin', 'user'], permissions: ['*'] };
+      }
+      return null;
+    };
+    app.use(auth({ userResolver: mockUserResolver }));
+
+    // Setup security middleware
+    app.use(helmet());
+    app.use(cors({ origin: '*' }));
+    app.use(rateLimit({ windowMs: 60000, max: 100 }));
 
     // Test all HTTP methods
     app.get('/api/status', (ctx: any) => {
@@ -173,6 +196,75 @@ describe('Complete API Integration Tests', () => {
       });
     });
 
+    // Test caching middleware
+    app.get('/api/cached', cache({ maxAge: 3600, public: true }), (ctx: any) => {
+      ctx.json({ message: 'Cached response', timestamp: Date.now() });
+    });
+
+    app.get('/api/cached-store', cacheWithStore({ maxAge: 300 }), (ctx: any) => {
+      ctx.json({ message: 'Store cached', timestamp: Date.now() });
+    });
+
+    app.get('/api/etag', cache({ etag: true }), (ctx: any) => {
+      ctx.json({ message: 'ETag test' });
+    });
+
+    // Test auth middleware
+    app.get('/api/protected', requireAuth(), (ctx: any) => {
+      ctx.json({ user: ctx.state.user });
+    });
+
+    app.get('/api/admin', requireRole('admin'), (ctx: any) => {
+      ctx.json({ message: 'Admin only', user: ctx.state.user });
+    });
+
+    app.get('/api/read-all', requirePermission('read:all'), (ctx: any) => {
+      ctx.json({ message: 'Read all permission', user: ctx.state.user });
+    });
+
+    // Test security middleware endpoints
+    app.get('/api/security-test', (ctx: any) => {
+      ctx.json({ message: 'Security test' });
+    });
+
+    // Test timeout middleware endpoints
+    app.get('/api/timeout-fast', timeout({ timeout: 5000 }), (ctx: any) => {
+      ctx.ok({ message: 'Request completed quickly' });
+    });
+
+    app.get('/api/timeout-slow', timeout({ timeout: 100 }), (ctx: any) => {
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          if (!ctx.res.headersSent) {
+            ctx.ok({ message: 'This should timeout' });
+          }
+          resolve(undefined);
+        }, 200);
+        ctx.req.on('close', () => {
+          clearTimeout(timer);
+        });
+      });
+    });
+
+    app.get('/api/timeout-callback', timeout({ 
+      timeout: 100,
+      onTimeout: (ctx: any) => {
+        ctx.state.timeoutCalled = true;
+      }
+    }), (ctx: any) => {
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          if (!ctx.res.headersSent) {
+            ctx.ok({ message: 'This should timeout' });
+          }
+          resolve(undefined);
+        }, 200);
+        ctx.req.on('close', () => {
+          clearTimeout(timer);
+        });
+      });
+    });
+
     // Start server
     const port = 3004 + Math.floor(Math.random() * 1000);
     app.listen(port);
@@ -185,7 +277,7 @@ describe('Complete API Integration Tests', () => {
   afterAll(async () => {
     if (app) {
       app.close();
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
   });
 
@@ -494,6 +586,178 @@ describe('Complete API Integration Tests', () => {
       const data = await response.json() as any;
       expect(data.error).toContain('must be a number');
       expect(data.status).toBe(400);
+    });
+  });
+
+  describe('Caching Middleware', () => {
+    it('should set Cache-Control header with maxAge', async () => {
+      const response = await fetch(`${baseUrl}/api/cached`);
+      expect(response.status).toBe(200);
+      const cacheControl = response.headers.get('Cache-Control');
+      expect(cacheControl).toContain('max-age=3600');
+      expect(cacheControl).toContain('public');
+    });
+
+    it('should set ETag header and return 304 on match', async () => {
+      const firstResponse = await fetch(`${baseUrl}/api/etag`);
+      expect(firstResponse.status).toBe(200);
+      const etag = firstResponse.headers.get('ETag');
+      expect(etag).toBeTruthy();
+
+      const secondResponse = await fetch(`${baseUrl}/api/etag`, {
+        headers: {
+          'If-None-Match': etag!
+        }
+      });
+
+      expect(secondResponse.status).toBe(304);
+    });
+
+    it('should cache response in store and return cached version', async () => {
+      const firstResponse = await fetch(`${baseUrl}/api/cached-store`);
+      expect(firstResponse.status).toBe(200);
+      const firstData = await firstResponse.json() as any;
+      const firstCache = firstResponse.headers.get('X-Cache');
+      expect(firstCache === 'MISS' || firstCache === null).toBe(true);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const secondResponse = await fetch(`${baseUrl}/api/cached-store`);
+      expect(secondResponse.status).toBe(200);
+      const secondData = await secondResponse.json() as any;
+      expect(secondResponse.headers.get('X-Cache')).toBe('HIT');
+      expect(firstData.timestamp).toBe(secondData.timestamp);
+    });
+  });
+
+  describe('Auth Middleware', () => {
+    it('should allow access with valid token', async () => {
+      const response = await fetch(`${baseUrl}/api/protected`, {
+        headers: {
+          'Authorization': 'Bearer valid-token'
+        }
+      });
+      expect(response.status).toBe(200);
+      const data = await response.json() as any;
+      expect(data.user).toEqual({ id: '1', name: 'Test User', roles: ['user'], permissions: ['read:own'] });
+    });
+
+    it('should reject access without token', async () => {
+      const response = await fetch(`${baseUrl}/api/protected`);
+      expect(response.status).toBe(401);
+      const data = await response.json() as any;
+      expect(data).toEqual({
+        error: 'Authentication required',
+        status: 401
+      });
+    });
+
+    it('should allow access with required role', async () => {
+      const response = await fetch(`${baseUrl}/api/admin`, {
+        headers: {
+          'Authorization': 'Bearer admin-token'
+        }
+      });
+      expect(response.status).toBe(200);
+      const data = await response.json() as any;
+      expect(data.message).toBe('Admin only');
+      expect(data.user.roles).toContain('admin');
+    });
+
+    it('should reject access without required role', async () => {
+      const response = await fetch(`${baseUrl}/api/admin`, {
+        headers: {
+          'Authorization': 'Bearer valid-token'
+        }
+      });
+      expect(response.status).toBe(403);
+      const data = await response.json() as any;
+      expect(data).toEqual({
+        error: 'Insufficient permissions',
+        status: 403,
+        required: ['admin'],
+        userRoles: ['user']
+      });
+    });
+
+    it('should allow access with required permission', async () => {
+      const response = await fetch(`${baseUrl}/api/read-all`, {
+        headers: {
+          'Authorization': 'Bearer admin-token'
+        }
+      });
+      expect(response.status).toBe(200);
+      const data = await response.json() as any;
+      expect(data.message).toBe('Read all permission');
+    });
+  });
+
+  describe('Security Middleware', () => {
+    it('should set security headers from helmet', async () => {
+      const response = await fetch(`${baseUrl}/api/security-test`);
+      expect(response.status).toBe(200);
+      expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
+      expect(response.headers.get('X-Frame-Options')).toBe('DENY');
+      expect(response.headers.get('X-XSS-Protection')).toBe('1; mode=block');
+      expect(response.headers.get('Strict-Transport-Security')).toBeTruthy();
+    });
+
+    it('should set CORS headers', async () => {
+      const response = await fetch(`${baseUrl}/api/security-test`, {
+        headers: {
+          'Origin': 'https://example.com'
+        }
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    });
+
+    it('should handle CORS preflight request', async () => {
+      const response = await fetch(`${baseUrl}/api/security-test`, {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': 'https://example.com',
+          'Access-Control-Request-Method': 'POST'
+        }
+      });
+      expect(response.status).toBe(204);
+      expect(response.headers.get('Access-Control-Allow-Methods')).toBeTruthy();
+      expect(response.headers.get('Access-Control-Allow-Headers')).toBeTruthy();
+    });
+
+    it('should allow requests within rate limit', async () => {
+      const responses = await Promise.all(
+        Array.from({ length: 5 }, () => fetch(`${baseUrl}/api/security-test`))
+      );
+      responses.forEach(response => {
+        expect(response.status).toBe(200);
+      });
+    });
+  });
+
+  describe('Timeout Middleware', () => {
+    it('should complete request that finishes before timeout', async () => {
+      const response = await fetch(`${baseUrl}/api/timeout-fast`);
+      expect(response.status).toBe(200);
+      const data = await response.json() as any;
+      expect(data.message).toBe('Request completed quickly');
+    });
+
+    it('should timeout request that takes too long', async () => {
+      const response = await fetch(`${baseUrl}/api/timeout-slow`);
+      expect(response.status).toBe(408);
+      const data = await response.json() as any;
+      expect(data.error).toBe('Request timeout');
+      expect(data.status).toBe(408);
+      expect(response.headers.get('Connection')).toBe('close');
+    });
+
+    it('should call onTimeout callback when timeout occurs', async () => {
+      const response = await fetch(`${baseUrl}/api/timeout-callback`);
+      expect(response.status).toBe(408);
+      const data = await response.json() as any;
+      expect(data.error).toBe('Request timeout');
+      expect(data.status).toBe(408);
     });
   });
 });
