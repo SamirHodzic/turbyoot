@@ -193,21 +193,25 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3002 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(executionOrder).toEqual(['middleware1', 'middleware2', 'handler']);
-      expect(middleware1).toHaveBeenCalled();
-      expect(middleware2).toHaveBeenCalled();
-      expect(handler).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
-      await new Promise(resolve => setTimeout(resolve, 50));
+        expect(executionOrder).toEqual(['middleware1', 'middleware2', 'handler']);
+        expect(middleware1).toHaveBeenCalled();
+        expect(middleware2).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
   });
 
@@ -238,20 +242,24 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3003 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(executionOrder).toEqual(['router-middleware', 'handler']);
-      expect(routerMiddleware).toHaveBeenCalled();
-      expect(handler).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
-      await new Promise(resolve => setTimeout(resolve, 50));
+        expect(executionOrder).toEqual(['router-middleware', 'handler']);
+        expect(routerMiddleware).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should execute router-level middleware before route-specific middleware', async () => {
@@ -279,21 +287,25 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3004 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(executionOrder).toEqual(['router-middleware', 'route-middleware', 'handler']);
-      expect(routerMiddleware).toHaveBeenCalled();
-      expect(routeMiddleware).toHaveBeenCalled();
-      expect(handler).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
-      await new Promise(resolve => setTimeout(resolve, 50));
+        expect(executionOrder).toEqual(['router-middleware', 'route-middleware', 'handler']);
+        expect(routerMiddleware).toHaveBeenCalled();
+        expect(routeMiddleware).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should execute multiple router-level middleware in order', async () => {
@@ -321,21 +333,25 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3005 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(executionOrder).toEqual(['router-middleware-1', 'router-middleware-2', 'handler']);
-      expect(routerMiddleware1).toHaveBeenCalled();
-      expect(routerMiddleware2).toHaveBeenCalled();
-      expect(handler).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
-      await new Promise(resolve => setTimeout(resolve, 50));
+        expect(executionOrder).toEqual(['router-middleware-1', 'router-middleware-2', 'handler']);
+        expect(routerMiddleware1).toHaveBeenCalled();
+        expect(routerMiddleware2).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
   });
 
@@ -367,21 +383,25 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3006 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(executionOrder).toEqual(['before-1', 'before-2', 'handler', 'after-2', 'after-1']);
-      expect(middleware1).toHaveBeenCalled();
-      expect(middleware2).toHaveBeenCalled();
-      expect(handler).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
-      await new Promise(resolve => setTimeout(resolve, 50));
+        expect(executionOrder).toEqual(['before-1', 'before-2', 'handler', 'after-2', 'after-1']);
+        expect(middleware1).toHaveBeenCalled();
+        expect(middleware2).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should stop middleware chain if next() is not called', async () => {
@@ -409,20 +429,25 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3007 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(executionOrder).toEqual(['middleware1', 'middleware2']);
-      expect(handler).not.toHaveBeenCalled();
-      expect(middleware1).toHaveBeenCalled();
-      expect(middleware2).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
+        expect(executionOrder).toEqual(['middleware1', 'middleware2']);
+        expect(handler).not.toHaveBeenCalled();
+        expect(middleware1).toHaveBeenCalled();
+        expect(middleware2).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should handle routes without middleware', async () => {
@@ -437,19 +462,24 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3008 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      const data = await response.json();
       
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(response.status).toBe(200);
-      expect(data).toEqual({ message: 'success' });
-      expect(handler).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        const data = await response.json();
 
-      app.close();
+        expect(response.status).toBe(200);
+        expect(data).toEqual({ message: 'success' });
+        expect(handler).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
   });
 
@@ -508,18 +538,23 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3009 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/api/users`);
-      const data = await response.json();
       
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(response.status).toBe(200);
-      expect(data).toEqual({ users: [] });
+      try {
+        const response = await fetch(`http://localhost:${port}/api/users`);
+        const data = await response.json();
 
-      app.close();
+        expect(response.status).toBe(200);
+        expect(data).toEqual({ users: [] });
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should handle requests with router and route middleware', async () => {
@@ -549,23 +584,28 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3010 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/api/test`);
-      const data = await response.json();
       
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      expect(response.status).toBe(200);
-      expect(data).toEqual({ 
-        routerMiddleware: true,
-        routeMiddleware: true
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
       });
-      expect(routerMiddleware).toHaveBeenCalled();
-      expect(routeMiddleware).toHaveBeenCalled();
 
-      app.close();
+      try {
+        const response = await fetch(`http://localhost:${port}/api/test`);
+        const data = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(data).toEqual({ 
+          routerMiddleware: true,
+          routeMiddleware: true
+        });
+        expect(routerMiddleware).toHaveBeenCalled();
+        expect(routeMiddleware).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should handle route parameters through mounted router', async () => {
@@ -578,18 +618,23 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3011 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/api/users/123`);
-      const data = await response.json();
       
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(response.status).toBe(200);
-      expect(data).toEqual({ userId: '123' });
+      try {
+        const response = await fetch(`http://localhost:${port}/api/users/123`);
+        const data = await response.json();
 
-      app.close();
+        expect(response.status).toBe(200);
+        expect(data).toEqual({ userId: '123' });
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
   });
 
@@ -636,21 +681,26 @@ describe('Router', () => {
       adminRouter.mount(app);
       
       const port = 3012 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const apiResponse = await fetch(`http://localhost:${port}/api/users`);
-      const apiData = await apiResponse.json();
       
-      const adminResponse = await fetch(`http://localhost:${port}/admin/users`);
-      const adminData = await adminResponse.json();
-      
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(apiData).toEqual({ source: 'api' });
-      expect(adminData).toEqual({ source: 'admin' });
+      try {
+        const apiResponse = await fetch(`http://localhost:${port}/api/users`);
+        const apiData = await apiResponse.json();
+        
+        const adminResponse = await fetch(`http://localhost:${port}/admin/users`);
+        const adminData = await adminResponse.json();
 
-      app.close();
+        expect(apiData).toEqual({ source: 'api' });
+        expect(adminData).toEqual({ source: 'admin' });
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
 
     it('should handle async middleware errors gracefully', async () => {
@@ -665,17 +715,22 @@ describe('Router', () => {
       router.mount(app);
       
       const port = 3013 + Math.floor(Math.random() * 1000);
-      app.listen(port);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const response = await fetch(`http://localhost:${port}/test`);
-      await response.text();
       
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise<void>((resolve) => {
+        app.listen(port, () => {
+          resolve();
+        });
+      });
 
-      expect(errorMiddleware).toHaveBeenCalled();
+      try {
+        const response = await fetch(`http://localhost:${port}/test`);
+        await response.text();
 
-      app.close();
+        expect(errorMiddleware).toHaveBeenCalled();
+      } finally {
+        app.close();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     });
   });
 });
