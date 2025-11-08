@@ -1,4 +1,16 @@
-import { Context, HttpError } from './types.js';
+import { Context } from './types.js';
+
+export class HttpError extends Error {
+  status: number;
+  expose: boolean;
+
+  constructor(status: number, message: string, expose: boolean = true) {
+    super(message);
+    this.status = status;
+    this.expose = expose;
+    this.name = 'HttpError';
+  }
+}
 
 export function errorHandler() {
   return async (ctx: Context, next: () => Promise<void>) => {
@@ -28,4 +40,3 @@ export function errorHandler() {
   };
 }
 
-export { HttpError } from './types.js';

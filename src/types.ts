@@ -62,18 +62,6 @@ export interface CompiledRoute {
 
 export type RouteHandler = (ctx: Context) => Promise<void> | void;
 
-export class HttpError extends Error {
-  status: number;
-  expose: boolean;
-
-  constructor(status: number, message: string, expose: boolean = true) {
-    super(message);
-    this.status = status;
-    this.expose = expose;
-    this.name = 'HttpError';
-  }
-}
-
 export interface CacheAdapter {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ttl?: number): Promise<void>;
