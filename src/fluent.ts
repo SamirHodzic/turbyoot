@@ -147,42 +147,45 @@ export class FluentRouter implements FluentRoute {
 
   resource(name: string, options: ResourceOptions = {}): FluentRoute {
     const { only = [], except = [], middleware: resourceMiddleware = [], prefix = '', handlers = {} } = options;
-    const basePath = prefix ? `${prefix}/${name}` : name;
+    const normalizedPrefix = prefix.replace(/\/+$/, '');
+    const normalizedName = name.replace(/^\/+/, '');
+    const basePath = normalizedPrefix ? `${normalizedPrefix}/${normalizedName}` : normalizedName;
+    const normalizedBasePath = basePath.replace(/\/+/g, '/');
 
     const routes = [
       {
         method: 'GET',
-        path: basePath.startsWith('/') ? basePath : `/${basePath}`,
+        path: normalizedBasePath.startsWith('/') ? normalizedBasePath : `/${normalizedBasePath}`,
         handler: 'index',
         name: 'index',
       },
       {
         method: 'GET',
-        path: basePath.startsWith('/') ? `${basePath}/:id` : `/${basePath}/:id`,
+        path: normalizedBasePath.startsWith('/') ? `${normalizedBasePath}/:id` : `/${normalizedBasePath}/:id`,
         handler: 'show',
         name: 'show',
       },
       {
         method: 'POST',
-        path: basePath.startsWith('/') ? basePath : `/${basePath}`,
+        path: normalizedBasePath.startsWith('/') ? normalizedBasePath : `/${normalizedBasePath}`,
         handler: 'create',
         name: 'create',
       },
       {
         method: 'PUT',
-        path: basePath.startsWith('/') ? `${basePath}/:id` : `/${basePath}/:id`,
+        path: normalizedBasePath.startsWith('/') ? `${normalizedBasePath}/:id` : `/${normalizedBasePath}/:id`,
         handler: 'update',
         name: 'update',
       },
       {
         method: 'PATCH',
-        path: basePath.startsWith('/') ? `${basePath}/:id` : `/${basePath}/:id`,
+        path: normalizedBasePath.startsWith('/') ? `${normalizedBasePath}/:id` : `/${normalizedBasePath}/:id`,
         handler: 'patch',
         name: 'patch',
       },
       {
         method: 'DELETE',
-        path: basePath.startsWith('/') ? `${basePath}/:id` : `/${basePath}/:id`,
+        path: normalizedBasePath.startsWith('/') ? `${normalizedBasePath}/:id` : `/${normalizedBasePath}/:id`,
         handler: 'destroy',
         name: 'destroy',
       },
@@ -191,6 +194,12 @@ export class FluentRouter implements FluentRoute {
     const filteredRoutes = routes.filter((route) => {
       if (only.length > 0) return only.includes(route.name);
       if (except.length > 0) return !except.includes(route.name);
+      
+      const hasHandlers = Object.keys(handlers).length > 0;
+      if (hasHandlers) {
+        return route.handler in handlers;
+      }
+      
       return true;
     });
 
@@ -235,6 +244,21 @@ export class FluentRouter implements FluentRoute {
         handler,
         middleware: allMiddleware,
       });
+
+      const methodMap: Record<string, string> = {
+        'GET': 'get',
+        'POST': 'post',
+        'PUT': 'put',
+        'PATCH': 'patch',
+        'DELETE': 'del',
+      };
+      const methodName = methodMap[route.method] || route.method.toLowerCase();
+      
+      if (allMiddleware.length > 0) {
+        (this.app as any)[methodName](route.path, allMiddleware[0], handler);
+      } else {
+        (this.app as any)[methodName](route.path, handler);
+      }
     }
 
     return this;
@@ -258,9 +282,12 @@ export class FluentRouter implements FluentRoute {
 
     const originalResource = groupRouter.resource.bind(groupRouter);
     groupRouter.resource = (name: string, options: ResourceOptions = {}) => {
+      const normalizedPrefix = prefix.replace(/\/+$/, '');
+      const existingPrefix = options.prefix ? options.prefix.replace(/^\/+/, '') : '';
+      const combinedPrefix = existingPrefix ? `${normalizedPrefix}/${existingPrefix}` : normalizedPrefix;
       const prefixedOptions = {
         ...options,
-        prefix: options.prefix ? `${prefix}${options.prefix}` : prefix,
+        prefix: combinedPrefix,
       };
       return originalResource(name, prefixedOptions);
     };
