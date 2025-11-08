@@ -7,6 +7,7 @@ This page contains a list of examples using Turbyoot.
 - [auht-jwt](./auht-jwt) - Authentication with JWT tokens
 - [static-serving](./static-serving) - Serving static files
 - [file-download](./file-download) - Transferring files to client with download headers
+- [file-upload](./file-upload) - Uploading files with multipart/form-data
 - [error](./error) - Working with error middleware
 - [custom-middleware](./custom-middleware) - Creating and using custom middleware
 - [content-validation](./content-validation) - Request body and query validation

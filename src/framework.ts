@@ -142,11 +142,15 @@ export class Turbyoot {
 
         let body: any = null;
         if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-          try {
-            body = await parseBody(req);
-          } catch (error) {
-            console.error('Body parsing error:', error);
-            body = null;
+          const contentType = req.headers['content-type'] || '';
+          // skip body parsing for multipart/form-data to allow streaming file uploads
+          if (!contentType.includes('multipart/form-data')) {
+            try {
+              body = await parseBody(req);
+            } catch (error) {
+              console.error('Body parsing error:', error);
+              body = null;
+            }
           }
         }
 
