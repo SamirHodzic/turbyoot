@@ -1,5 +1,10 @@
 # Turbyoot
 
+[![npm version](https://badgen.net/npm/v/turbyoot)](https://www.npmjs.com/package/turbyoot)
+[![GitHub Actions](https://github.com/SamirHodzic/turbyoot/actions/workflows/ci.yml/badge.svg)](https://github.com/SamirHodzic/turbyoot/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org/)
+
 **A modern, simple and intuitive Node.js web framework that makes building APIs simple and enjoyable.**
 
 Turbyoot is a zero-runtime dependency framework that combines Koa's middleware pattern with Express's routing API, enhanced with modern features like fluent APIs and resource routing. Built with TypeScript, it provides a clean, chainable syntax for defining routes and comes with essential middleware for security, validation, and performance.
