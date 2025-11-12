@@ -1,5 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { Context, Middleware, RouteHandler, CompiledRoute, FluentRoute, ResourceOptions, Plugin } from './types.js';
+import { createServer as createHttpsServer, ServerOptions as HttpsServerOptions } from 'https';
+import { createServer as createHttp2Server, createSecureServer, Http2ServerRequest, Http2ServerResponse } from 'http2';
+import { Context, Middleware, RouteHandler, CompiledRoute, FluentRoute, ResourceOptions, Plugin, ServerOptions } from './types.js';
 import { createContext } from './context.js';
 import { compilePath, matchPath } from './utils/path.js';
 import { parseBody } from './utils/body.js';
@@ -131,100 +133,154 @@ export class Turbyoot {
     };
   }
 
-  listen(port: number, callback?: () => void): void {
-    this.server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-      try {
-        const urlString = req.url || '/';
-        const queryIndex = urlString.indexOf('?');
-        const pathname = queryIndex === -1 ? urlString : urlString.slice(0, queryIndex);
-        const queryString = queryIndex === -1 ? '' : urlString.slice(queryIndex + 1);
-        const query = queryString ? parseQueryParams(queryString) : {};
+  private async handleRequest(
+    req: IncomingMessage | Http2ServerRequest,
+    res: ServerResponse | Http2ServerResponse,
+  ): Promise<void> {
+    try {
+      const urlString = req.url || '/';
+      const queryIndex = urlString.indexOf('?');
+      const pathname = queryIndex === -1 ? urlString : urlString.slice(0, queryIndex);
+      const queryString = queryIndex === -1 ? '' : urlString.slice(queryIndex + 1);
+      const query = queryString ? parseQueryParams(queryString) : {};
 
-        let body: any = null;
-        if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-          const contentType = req.headers['content-type'] || '';
-          // skip body parsing for multipart/form-data to allow streaming file uploads
-          if (!contentType.includes('multipart/form-data')) {
-            try {
-              body = await parseBody(req);
-            } catch (error) {
-              console.error('Body parsing error:', error);
-              body = null;
-            }
+      let body: any = null;
+      if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+        const contentType = req.headers['content-type'] || '';
+        if (!contentType.includes('multipart/form-data')) {
+          try {
+            body = await parseBody(req);
+          } catch (error) {
+            console.error('Body parsing error:', error);
+            body = null;
           }
-        }
-
-        let matchedRoute: CompiledRoute | null = null;
-        let params: Record<string, string> = {};
-        const routesOnPath: CompiledRoute[] = [];
-
-        for (const route of this.routes) {
-          const match = matchPath(route, pathname);
-          if (match.match) {
-            routesOnPath.push(route);
-            if (route.method === req.method) {
-              matchedRoute = route;
-              params = match.params;
-              break;
-            }
-          }
-        }
-
-        if (req.method === 'OPTIONS' && !matchedRoute && routesOnPath.length > 0) {
-          const routeMiddleware: Middleware[] = [];
-          for (const route of routesOnPath) {
-            if (route.middleware) {
-              routeMiddleware.push(...route.middleware);
-            }
-          }
-
-          matchedRoute = {
-            method: 'OPTIONS',
-            path: pathname,
-            regex: new RegExp('^' + pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'),
-            paramNames: [],
-            handler: async () => {},
-            middleware: routeMiddleware,
-          };
-        }
-
-        const ctx = createContext(req, res, params, query, body);
-
-        let middlewareIndex = 0;
-        const executeMiddleware = async (): Promise<void> => {
-          if (middlewareIndex < this.middleware.length) {
-            const middleware = this.middleware[middlewareIndex++];
-            await middleware(ctx, executeMiddleware);
-          } else if (matchedRoute) {
-            let routeMiddlewareIndex = 0;
-            const executeRouteMiddleware = async (): Promise<void> => {
-              if (routeMiddlewareIndex < (matchedRoute.middleware || []).length) {
-                const middleware = matchedRoute.middleware![routeMiddlewareIndex++];
-                await middleware(ctx, executeRouteMiddleware);
-              } else {
-                await matchedRoute.handler(ctx);
-              }
-            };
-            await executeRouteMiddleware();
-          } else {
-            ctx.statusCode = 404;
-            ctx.res.statusCode = 404;
-            ctx.json({ error: 'Not Found', status: 404 });
-          }
-        };
-
-        await executeMiddleware();
-      } catch (error) {
-        console.error('Server error:', error);
-        if (!res.headersSent) {
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ error: 'Internal Server Error', status: 500 }));
         }
       }
-    });
 
-    this.server.listen(port, callback);
+      let matchedRoute: CompiledRoute | null = null;
+      let params: Record<string, string> = {};
+      const routesOnPath: CompiledRoute[] = [];
+
+      for (const route of this.routes) {
+        const match = matchPath(route, pathname);
+        if (match.match) {
+          routesOnPath.push(route);
+          if (route.method === req.method) {
+            matchedRoute = route;
+            params = match.params;
+            break;
+          }
+        }
+      }
+
+      if (req.method === 'OPTIONS' && !matchedRoute && routesOnPath.length > 0) {
+        const routeMiddleware: Middleware[] = [];
+        for (const route of routesOnPath) {
+          if (route.middleware) {
+            routeMiddleware.push(...route.middleware);
+          }
+        }
+
+        matchedRoute = {
+          method: 'OPTIONS',
+          path: pathname,
+          regex: new RegExp('^' + pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'),
+          paramNames: [],
+          handler: async () => {},
+          middleware: routeMiddleware,
+        };
+      }
+
+      const ctx = createContext(req as IncomingMessage, res as ServerResponse, params, query, body);
+
+      let middlewareIndex = 0;
+      const executeMiddleware = async (): Promise<void> => {
+        if (middlewareIndex < this.middleware.length) {
+          const middleware = this.middleware[middlewareIndex++];
+          await middleware(ctx, executeMiddleware);
+        } else if (matchedRoute) {
+          let routeMiddlewareIndex = 0;
+          const executeRouteMiddleware = async (): Promise<void> => {
+            if (routeMiddlewareIndex < (matchedRoute.middleware || []).length) {
+              const middleware = matchedRoute.middleware![routeMiddlewareIndex++];
+              await middleware(ctx, executeRouteMiddleware);
+            } else {
+              await matchedRoute.handler(ctx);
+            }
+          };
+          await executeRouteMiddleware();
+        } else {
+          ctx.statusCode = 404;
+          ctx.res.statusCode = 404;
+          ctx.json({ error: 'Not Found', status: 404 });
+        }
+      };
+
+      await executeMiddleware();
+    } catch (error) {
+      console.error('Server error:', error);
+      if (!res.headersSent) {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Internal Server Error', status: 500 }));
+      }
+    }
+  }
+
+  listen(port: number, callback?: () => void): void;
+  listen(port: number, options?: ServerOptions, callback?: () => void): void;
+  listen(port: number, optionsOrCallback?: ServerOptions | (() => void), callback?: () => void): void {
+    let options: ServerOptions | undefined;
+    let cb: (() => void) | undefined;
+
+    if (typeof optionsOrCallback === 'function') {
+      cb = optionsOrCallback;
+      options = undefined;
+    } else {
+      options = optionsOrCallback;
+      cb = callback;
+    }
+
+    const protocol = options?.protocol || 'http';
+    const host = options?.host;
+    const listenOptions = {
+      port,
+      host,
+      backlog: options?.backlog,
+      exclusive: options?.exclusive,
+      ipv6Only: options?.ipv6Only,
+    };
+
+    if (protocol === 'https') {
+      if (!options?.https) {
+        throw new Error('HTTPS options (key and cert) are required when using HTTPS protocol');
+      }
+      this.server = createHttpsServer(options.https as HttpsServerOptions, async (req, res) => {
+        await this.handleRequest(req, res);
+      });
+    } else if (protocol === 'http2') {
+      const http2Options: any = { ...options?.http2 };
+      if (options?.https) {
+        http2Options.key = options.https.key;
+        http2Options.cert = options.https.cert;
+        if (options.https.ca) http2Options.ca = options.https.ca;
+        if (options.https.pfx) http2Options.pfx = options.https.pfx;
+        if (options.https.passphrase) http2Options.passphrase = options.https.passphrase;
+        this.server = createSecureServer(http2Options, async (req: Http2ServerRequest, res: Http2ServerResponse) => {
+          await this.handleRequest(req, res);
+        });
+      } else {
+        this.server = createHttp2Server(http2Options, async (req: Http2ServerRequest, res: Http2ServerResponse) => {
+          await this.handleRequest(req, res);
+        });
+      }
+    } else {
+      this.server = createServer(async (req, res) => {
+        await this.handleRequest(req, res);
+      });
+    }
+
+    this.server.listen(listenOptions, cb);
   }
 
   close(): void {

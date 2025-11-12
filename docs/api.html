@@ -319,17 +319,131 @@ const app = new Turbyoot();</code></pre>
         <p>The response includes the overall status, timestamp, uptime, and results for each check. Returns 200 if all checks pass, 503 if any check fails.</p>
 
         <h3 id="app-listen">app.listen(port, callback)</h3>
+        <h3 id="app-listen-options">app.listen(port, options, callback)</h3>
         <p>Binds and listens for connections on the specified port. This method starts the HTTP server and begins accepting incoming requests. The callback function is called once the server is ready to accept connections.</p>
+        <p>Turbyoot supports three protocols: HTTP (default), HTTPS, and HTTP/2. You can specify the protocol and configuration options when starting the server.</p>
         <p><strong>Parameters:</strong></p>
         <ul>
           <li><code>port</code> - The port number to listen on</li>
+          <li><code>options</code> - Optional server configuration object (see below)</li>
           <li><code>callback</code> - Optional callback function called when the server starts listening</li>
         </ul>
-        <p><strong>Example:</strong></p>
+        <p><strong>Server Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>protocol</code></td>
+              <td><code>'http' | 'https' | 'http2'</code></td>
+              <td>Protocol to use. Defaults to <code>'http'</code></td>
+            </tr>
+            <tr>
+              <td><code>https</code></td>
+              <td><code>HttpsOptions</code></td>
+              <td>HTTPS/SSL configuration (required for HTTPS and secure HTTP/2)</td>
+            </tr>
+            <tr>
+              <td><code>http2</code></td>
+              <td><code>Http2Options</code></td>
+              <td>HTTP/2 specific configuration options</td>
+            </tr>
+            <tr>
+              <td><code>host</code></td>
+              <td><code>string</code></td>
+              <td>Hostname to bind to (defaults to all interfaces)</td>
+            </tr>
+            <tr>
+              <td><code>backlog</code></td>
+              <td><code>number</code></td>
+              <td>Maximum length of the queue of pending connections</td>
+            </tr>
+            <tr>
+              <td><code>exclusive</code></td>
+              <td><code>boolean</code></td>
+              <td>When true, the port cannot be shared</td>
+            </tr>
+            <tr>
+              <td><code>ipv6Only</code></td>
+              <td><code>boolean</code></td>
+              <td>For TCP, setting this to true will disable dual-stack support</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>HTTPS Options:</strong></p>
+        <p>The <code>https</code> option accepts standard Node.js HTTPS server options, including:</p>
+        <ul>
+          <li><code>key</code> - Private key (string, Buffer, or array)</li>
+          <li><code>cert</code> - Certificate (string, Buffer, or array)</li>
+          <li><code>ca</code> - Certificate authority (optional)</li>
+          <li><code>pfx</code> - PFX or PKCS12 encoded private key and certificate chain (optional)</li>
+          <li><code>passphrase</code> - Passphrase for the private key (optional)</li>
+          <li>And other standard TLS options</li>
+        </ul>
+        <p><strong>HTTP/2 Options:</strong></p>
+        <p>The <code>http2</code> option accepts HTTP/2 specific configuration:</p>
+        <ul>
+          <li><code>allowHTTP1</code> - Allow HTTP/1.1 fallback (default: false for secure, true for insecure)</li>
+          <li><code>settings</code> - HTTP/2 settings (headerTableSize, enablePush, initialWindowSize, etc.)</li>
+          <li>And other HTTP/2 server options</li>
+        </ul>
+        <p><strong>Examples:</strong></p>
+        <p><strong>HTTP (default):</strong></p>
         <pre><code class="language-javascript">app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });</code></pre>
-        <p><strong>Note:</strong> Once <code>listen()</code> is called, the server will start processing requests. Make sure all routes and middleware are defined before calling this method.</p>
+        <p><strong>HTTPS:</strong></p>
+        <pre><code class="language-javascript">import { readFileSync } from 'fs';
+
+const key = readFileSync('key.pem');
+const cert = readFileSync('cert.pem');
+
+app.listen(3443, {
+  protocol: 'https',
+  https: {
+    key,
+    cert,
+  },
+}, () => {
+  console.log('HTTPS server is running on port 3443');
+});</code></pre>
+        <p><strong>HTTP/2 (secure):</strong></p>
+        <pre><code class="language-javascript">import { readFileSync } from 'fs';
+
+const key = readFileSync('key.pem');
+const cert = readFileSync('cert.pem');
+
+app.listen(3444, {
+  protocol: 'http2',
+  https: {
+    key,
+    cert,
+  },
+  http2: {
+    allowHTTP1: true,
+    settings: {
+      enablePush: true,
+      initialWindowSize: 65535,
+    },
+  },
+}, () => {
+  console.log('HTTP/2 server is running on port 3444');
+});</code></pre>
+        <p><strong>HTTP/2 (insecure, for development):</strong></p>
+        <pre><code class="language-javascript">app.listen(3444, {
+  protocol: 'http2',
+  http2: {
+    allowHTTP1: true,
+  },
+}, () => {
+  console.log('HTTP/2 server (insecure) is running on port 3444');
+});</code></pre>
+        <p><strong>Note:</strong> Once <code>listen()</code> is called, the server will start processing requests. Make sure all routes and middleware are defined before calling this method. When using HTTPS or secure HTTP/2, you must provide valid SSL/TLS certificates.</p>
 
         <h3 id="app-close">app.close()</h3>
         <p>Closes the server, stopping it from accepting new connections.</p>

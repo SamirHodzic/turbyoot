@@ -412,9 +412,15 @@ export class EnhancedTurbyoot {
     return this.app.healthCheck(checks);
   }
 
-  listen(port: number, callback?: () => void): void {
+  listen(port: number, callback?: () => void): void;
+  listen(port: number, options?: any, callback?: () => void): void;
+  listen(port: number, optionsOrCallback?: any, callback?: () => void): void {
     this.pluginManager.install(this);
-    this.app.listen(port, callback);
+    if (typeof optionsOrCallback === 'function') {
+      this.app.listen(port, optionsOrCallback);
+    } else {
+      this.app.listen(port, optionsOrCallback, callback);
+    }
   }
 
   close(): void {

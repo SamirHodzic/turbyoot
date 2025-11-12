@@ -1,6 +1,10 @@
 import { IncomingMessage } from 'http';
+import { Http2ServerRequest } from 'http2';
+import { Readable } from 'stream';
 
-export async function parseBody(req: IncomingMessage): Promise<any> {
+type RequestLike = IncomingMessage | Http2ServerRequest | Readable & { headers: Record<string, string | string[] | undefined>; method?: string | null };
+
+export async function parseBody(req: RequestLike): Promise<any> {
   return new Promise((resolve, reject) => {
     let body = '';
 
