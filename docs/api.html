@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Reference - Turbyoot</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+      <a href="index.html" class="nav-logo">Turbyoot</a>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search documentation..." autocomplete="off">
+        <div id="search-results" class="search-results"></div>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="getting-started.html">Getting Started</a></li>
+        <li><a href="guide.html">Guide</a></li>
+        <li><a href="api.html" class="active">API Reference</a></li>
+        <li><a href="https://github.com/SamirHodzic/turbyoot" target="_blank" rel="noopener noreferrer" class="external-link">GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></li>
+        <li>
+          <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="sidebar">
+      <nav class="sidebar-nav">
+        <h3>API Reference</h3>
+        <ul>
+          <li><a href="#turbyoot">Turbyoot</a></li>
+          <li><a href="#application">Application</a></li>
+          <li><a href="#context">Context</a></li>
+          <li><a href="#middleware">Middleware</a></li>
+          <li><a href="#auth">Auth</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <main class="content">
+      <h1>API Reference</h1>
+
+      <section id="turbyoot">
+        <h2>Turbyoot</h2>
+        <p>Creates an Express application. The <code>Turbyoot</code> class is exported by the <code>turbyoot</code> module.</p>
+        <pre><code class="language-javascript">import { Turbyoot } from 'turbyoot';
+const app = new Turbyoot();</code></pre>
+      </section>
+
+      <section id="application">
+        <h2>Application</h2>
+
+        <h3 id="app-use">app.use(middleware)</h3>
+        <p>Mounts the specified middleware function or functions. When a base path is not specified, the middleware is executed for every request to the app. Middleware functions have access to the context object (<code>ctx</code>) and the next middleware function in the application's request-response cycle.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>middleware</code> - A middleware function that takes <code>(ctx, next)</code> as parameters</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.use(async (ctx, next) => {
+  console.log('Request received');
+  await next();
+});</code></pre>
+        <p><strong>Note:</strong> You must call <code>await next()</code> to pass control to the next middleware function. If you don't call <code>next()</code>, the request will hang and never complete.</p>
+
+        <h3 id="app-get">app.get(path, handler)</h3>
+        <p>Routes HTTP GET requests to the specified path with the specified handler function. The handler receives a context object (<code>ctx</code>) that contains the request, response, and various helper methods.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>path</code> - A string representing a path or path pattern. Route parameters can be defined using <code>:paramName</code> syntax (e.g., <code>/users/:id</code>)</li>
+          <li><code>handler</code> - A function that handles the request. Can be a route handler or middleware followed by a handler</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.get('/users', (ctx) => {
+  ctx.ok({ users: [] });
+});</code></pre>
+        <p>You can also provide middleware before the handler:</p>
+        <pre><code class="language-javascript">app.get('/users', authMiddleware, (ctx) => {
+  ctx.ok({ users: [] });
+});</code></pre>
+        <p>Route parameters are available in <code>ctx.params</code>:</p>
+        <pre><code class="language-javascript">app.get('/users/:id', (ctx) => {
+  const userId = ctx.params.id;
+  ctx.ok({ user: { id: userId } });
+});</code></pre>
+
+        <h3 id="app-post">app.post(path, handler)</h3>
+        <p>Routes HTTP POST requests to the specified path with the specified handler function. POST is typically used for creating new resources. The request body is automatically parsed and available in <code>ctx.body</code>.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>path</code> - A string representing a path or path pattern</li>
+          <li><code>handler</code> - A function that handles the request, or middleware followed by a handler</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.post('/users', (ctx) => {
+  ctx.created({ user: ctx.body });
+});</code></pre>
+        <p><strong>Note:</strong> The request body is automatically parsed for POST requests. Make sure the <code>Content-Type</code> header is set correctly (e.g., <code>application/json</code>).</p>
+
+        <h3 id="app-put">app.put(path, handler)</h3>
+        <p>Routes HTTP PUT requests to the specified path with the specified handler function. PUT is typically used for full updates to a resource (replacing the entire resource). The request body is automatically parsed and available in <code>ctx.body</code>.</p>
+        <pre><code class="language-javascript">app.put('/users/:id', (ctx) => {
+  const updatedUser = { id: ctx.params.id, ...ctx.body };
+  ctx.ok({ user: updatedUser });
+});</code></pre>
+
+        <h3 id="app-del">app.del(path, handler)</h3>
+        <p>Routes HTTP DELETE requests to the specified path with the specified handler function. DELETE is used for removing resources. Typically returns a 204 No Content response.</p>
+        <pre><code class="language-javascript">app.del('/users/:id', (ctx) => {
+  // Delete user logic
+  ctx.noContent();
+});</code></pre>
+
+        <h3 id="app-patch">app.patch(path, handler)</h3>
+        <p>Routes HTTP PATCH requests to the specified path with the specified handler function. PATCH is typically used for partial updates to a resource (updating only specific fields). The request body is automatically parsed and available in <code>ctx.body</code>.</p>
+        <pre><code class="language-javascript">app.patch('/users/:id', (ctx) => {
+  const updatedUser = { id: ctx.params.id, ...ctx.body };
+  ctx.ok({ user: updatedUser });
+});</code></pre>
+
+        <h3 id="app-options">app.options(path, handler)</h3>
+        <p>Routes HTTP OPTIONS requests to the specified path with the specified handler function. OPTIONS is typically used for CORS preflight requests. Turbyoot automatically handles OPTIONS requests for routes that match other HTTP methods if no explicit OPTIONS handler is defined.</p>
+        <pre><code class="language-javascript">app.options('/users', (ctx) => {
+  ctx.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  ctx.noContent();
+});</code></pre>
+
+        <h3 id="app-head">app.head(path, handler)</h3>
+        <p>Routes HTTP HEAD requests to the specified path with the specified handler function. HEAD is identical to GET but without the response body. Useful for checking if a resource exists without downloading it. If no HEAD handler is defined, Turbyoot will automatically use the GET handler if one exists.</p>
+        <pre><code class="language-javascript">app.head('/users/:id', (ctx) => {
+  // Check if user exists
+  ctx.status(200);
+});</code></pre>
+
+        <h3 id="app-route">app.route()</h3>
+        <p>Returns an instance of a fluent router which you can use to handle HTTP verbs with optional middleware. This is part of Turbyoot's fluent API that allows you to chain route definitions. Use <code>app.route()</code> to avoid duplicate route naming and apply shared middleware to multiple routes.</p>
+        <p><strong>Returns:</strong> A <code>FluentRoute</code> instance that supports method chaining</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.route()
+  .use(authMiddleware)
+  .get('/api/users', (ctx) => ctx.ok({ users: [] }))
+  .post('/api/users', (ctx) => ctx.created({ user: ctx.body }));</code></pre>
+        <p>All routes defined in the fluent chain share the middleware applied with <code>.use()</code>. This is useful for grouping related routes that require the same authentication or validation.</p>
+
+        <h3 id="app-group">app.group(prefix, callback)</h3>
+        <p>Groups routes with a common prefix. This is useful for organizing API versions or grouping related functionality. The callback receives a router instance that automatically prefixes all routes defined within it.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>prefix</code> - A string prefix that will be prepended to all routes defined in the callback</li>
+          <li><code>callback</code> - A function that receives a router instance as its parameter</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.group('/api/v1', (router) => {
+  router.get('/users', (ctx) => ctx.ok({ users: [] }));
+  router.post('/users', (ctx) => ctx.created({ user: ctx.body }));
+});</code></pre>
+        <p>This creates routes at <code>/api/v1/users</code>. Groups can be nested:</p>
+        <pre><code class="language-javascript">app.group('/api', (apiRouter) => {
+  apiRouter.group('/v1', (v1Router) => {
+    v1Router.get('/users', (ctx) => ctx.ok({ users: [] }));
+  });
+});</code></pre>
+
+        <h3 id="app-resource">app.resource(name, options)</h3>
+        <p>Creates resource-based routes for CRUD operations.</p>
+        <pre><code class="language-javascript">app.resource('posts', {
+  prefix: '/api',
+  handlers: {
+    index: (ctx) => ctx.ok({ posts: [] }),
+    show: (ctx) => ctx.ok({ post: { id: ctx.params.id } }),
+    create: (ctx) => ctx.created({ post: ctx.body }),
+    update: (ctx) => ctx.ok({ post: { id: ctx.params.id, ...ctx.body } }),
+    destroy: (ctx) => ctx.noContent()
+  }
+});</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>prefix</code></td>
+              <td>URL prefix for all routes</td>
+              <td><code>string</code></td>
+              <td><code>''</code></td>
+            </tr>
+            <tr>
+              <td><code>only</code></td>
+              <td>Array of route names to include (e.g., ['index', 'show'])</td>
+              <td><code>string[]</code></td>
+              <td><code>[]</code></td>
+            </tr>
+            <tr>
+              <td><code>except</code></td>
+              <td>Array of route names to exclude</td>
+              <td><code>string[]</code></td>
+              <td><code>[]</code></td>
+            </tr>
+            <tr>
+              <td><code>middleware</code></td>
+              <td>Array of middleware functions</td>
+              <td><code>Middleware[]</code></td>
+              <td><code>[]</code></td>
+            </tr>
+            <tr>
+              <td><code>handlers</code></td>
+              <td>Object with custom handler functions</td>
+              <td><code>object</code></td>
+              <td><code>{}</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="app-static">app.static(directory, options)</h3>
+        <p>Serves static files from the given root directory.</p>
+        <pre><code class="language-javascript">app.use(app.static('public'));</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>prefix</code></td>
+              <td>URL prefix</td>
+              <td><code>string</code></td>
+              <td><code>'/'</code></td>
+            </tr>
+            <tr>
+              <td><code>maxAge</code></td>
+              <td>Cache control max-age in milliseconds</td>
+              <td><code>number</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>etag</code></td>
+              <td>Enable or disable ETag generation</td>
+              <td><code>boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>lastModified</code></td>
+              <td>Enable or disable Last-Modified header</td>
+              <td><code>boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>index</code></td>
+              <td>Default file name(s) to serve</td>
+              <td><code>string | string[]</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>dotfiles</code></td>
+              <td>How to handle dotfiles</td>
+              <td><code>'allow' | 'deny' | 'ignore'</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="app-healthcheck">app.healthCheck(checks)</h3>
+        <p>Creates a health check endpoint handler. This is useful for monitoring and load balancer health checks. The handler runs all provided checks and returns a status of "healthy" or "unhealthy" based on whether all checks pass.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>checks</code> - An array of check objects, each containing:
+            <ul>
+              <li><code>name</code> - A string identifier for the check</li>
+              <li><code>check</code> - A function that returns a boolean or Promise&lt;boolean&gt; indicating if the check passed</li>
+              <li><code>timeout</code> - Optional timeout in milliseconds (default: 5000)</li>
+            </ul>
+          </li>
+        </ul>
+        <p><strong>Returns:</strong> A route handler function</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.get('/health', app.healthCheck([
+  {
+    name: 'database',
+    check: async () => {
+      // Check database connection
+      return await db.ping();
+    },
+    timeout: 5000
+  },
+  {
+    name: 'redis',
+    check: () => redis.isReady(),
+    timeout: 3000
+  }
+]));</code></pre>
+        <p>The response includes the overall status, timestamp, uptime, and results for each check. Returns 200 if all checks pass, 503 if any check fails.</p>
+
+        <h3 id="app-listen">app.listen(port, callback)</h3>
+        <p>Binds and listens for connections on the specified port. This method starts the HTTP server and begins accepting incoming requests. The callback function is called once the server is ready to accept connections.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>port</code> - The port number to listen on</li>
+          <li><code>callback</code> - Optional callback function called when the server starts listening</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});</code></pre>
+        <p><strong>Note:</strong> Once <code>listen()</code> is called, the server will start processing requests. Make sure all routes and middleware are defined before calling this method.</p>
+
+        <h3 id="app-close">app.close()</h3>
+        <p>Closes the server, stopping it from accepting new connections.</p>
+
+        <h3 id="app-plugin">app.plugin(plugin)</h3>
+        <p>Registers and installs a plugin. Plugins allow you to extend Turbyoot's functionality by adding custom middleware, routes, or modifying the application instance. Plugins are installed immediately when registered, making them perfect for modularizing your application or creating reusable functionality.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>plugin</code> - A plugin object with the following properties:
+            <ul>
+              <li><code>name</code> - A unique string identifier for the plugin (required)</li>
+              <li><code>version</code> - The version string of the plugin (required)</li>
+              <li><code>install</code> - A function that receives the app instance and performs plugin installation (required). Can be async.</li>
+            </ul>
+          </li>
+        </ul>
+        <p><strong>Returns:</strong> The Turbyoot instance for method chaining</p>
+        <p><strong>Example - Simple Plugin:</strong></p>
+        <pre><code class="language-javascript">app.plugin({
+  name: 'my-plugin',
+  version: '1.0.0',
+  install(app) {
+    app.use(async (ctx, next) => {
+      console.log('Plugin middleware');
+      await next();
+    });
+    
+    app.get('/plugin-route', (ctx) => {
+      ctx.ok({ message: 'From plugin' });
+    });
+  }
+});</code></pre>
+        <p><strong>Example - Plugin with Options:</strong></p>
+        <pre><code class="language-javascript">function createDatabasePlugin(options) {
+  return {
+    name: 'database-plugin',
+    version: '1.0.0',
+    async install(app) {
+      const db = await connectToDatabase(options.connectionString);
+      
+      app.use(async (ctx, next) => {
+        ctx.state.db = db;
+        await next();
+      });
+      
+      app.get('/health', async (ctx) => {
+        const isHealthy = await db.ping();
+        ctx.ok({ database: isHealthy ? 'connected' : 'disconnected' });
+      });
+    }
+  };
+}
+
+app.plugin(createDatabasePlugin({
+  connectionString: process.env.DATABASE_URL
+}));</code></pre>
+        <p><strong>Example - Plugin Adding Multiple Routes:</strong></p>
+        <pre><code class="language-javascript">app.plugin({
+  name: 'api-routes',
+  version: '1.0.0',
+  install(app) {
+    app.group('/api/v1', (router) => {
+      router.get('/users', (ctx) => ctx.ok({ users: [] }));
+      router.post('/users', (ctx) => ctx.created({ user: ctx.body }));
+      router.get('/posts', (ctx) => ctx.ok({ posts: [] }));
+    });
+  }
+});</code></pre>
+        <p><strong>Best Practices:</strong></p>
+        <ul>
+          <li>Use plugins to organize related functionality (e.g., authentication, database, API routes)</li>
+          <li>Plugins can be async - use this for database connections, external service initialization, etc.</li>
+          <li>Plugins are installed in the order they are registered</li>
+          <li>You can create plugin factories (functions that return plugins) for configurable plugins</li>
+          <li>Plugins can modify the app instance, add middleware, routes, or even other plugins</li>
+        </ul>
+        <p><strong>Note:</strong> The <code>install</code> function receives the full Turbyoot app instance, giving you complete access to all methods including <code>use()</code>, route methods, <code>group()</code>, <code>resource()</code>, and even <code>plugin()</code> for nested plugins.</p>
+      </section>
+
+      <section id="context">
+        <h2>Context</h2>
+        <p>The context object encapsulates the Node.js request and response objects into a single object which provides many helpful methods for writing web applications and APIs.</p>
+
+        <h3>Properties</h3>
+        
+        <h4>ctx.req</h4>
+        <p>The Node.js HTTP <code>IncomingMessage</code> object. This provides access to all standard Node.js request properties and methods, including headers, URL, method, and more.</p>
+        <pre><code class="language-javascript">app.get('/example', (ctx) => {
+  console.log(ctx.req.method);  // 'GET'
+  console.log(ctx.req.url);     // '/example?foo=bar'
+  console.log(ctx.req.headers); // Request headers object
+});</code></pre>
+
+        <h4>ctx.res</h4>
+        <p>The Node.js HTTP <code>ServerResponse</code> object. This provides low-level access to the response object, though it's recommended to use the context helper methods instead.</p>
+
+        <h4>ctx.params</h4>
+        <p>An object containing route parameters extracted from the URL path. Route parameters are defined in the route path using <code>:paramName</code> syntax. For example, the route <code>/users/:id</code> will populate <code>ctx.params.id</code> with the value from the URL.</p>
+        <pre><code class="language-javascript">app.get('/users/:userId/posts/:postId', (ctx) => {
+  console.log(ctx.params.userId);  // Value from URL
+  console.log(ctx.params.postId);  // Value from URL
+});</code></pre>
+
+        <h4>ctx.query</h4>
+        <p>An object containing parsed query string parameters from the URL. Query parameters are automatically parsed from the URL's query string (the part after <code>?</code>).</p>
+        <pre><code class="language-javascript">// For URL: /users?page=1&limit=10&sort=name
+app.get('/users', (ctx) => {
+  console.log(ctx.query.page);   // '1'
+  console.log(ctx.query.limit);  // '10'
+  console.log(ctx.query.sort);   // 'name'
+});</code></pre>
+
+        <h4>ctx.body</h4>
+        <p>The parsed request body. Turbyoot automatically parses JSON, URL-encoded, and text request bodies. For POST, PUT, and PATCH requests, the body is parsed based on the <code>Content-Type</code> header. Multipart/form-data is not automatically parsed to allow for streaming file uploads.</p>
+        <pre><code class="language-javascript">app.post('/users', (ctx) => {
+  const userData = ctx.body;  // Already parsed JSON object
+  console.log(userData.name);
+  console.log(userData.email);
+});</code></pre>
+        <p><strong>Note:</strong> The body is only parsed for POST, PUT, and PATCH requests. For other methods, <code>ctx.body</code> will be <code>null</code>.</p>
+
+        <h4>ctx.statusCode</h4>
+        <p>The HTTP status code for the response. You can set this directly, but it's recommended to use the helper methods like <code>ctx.ok()</code>, <code>ctx.notFound()</code>, etc.</p>
+
+        <h4>ctx.state</h4>
+        <p>A state object for passing data between middleware functions and route handlers. This is the recommended way to share data across the middleware chain. Common use cases include storing authenticated user information, request metadata, or computed values.</p>
+        <pre><code class="language-javascript">app.use(async (ctx, next) => {
+  ctx.state.user = await getUserFromToken(ctx);
+  ctx.state.requestId = generateId();
+  await next();
+});
+
+app.get('/profile', (ctx) => {
+  const user = ctx.state.user;  // Set by previous middleware
+  ctx.ok({ user });
+});</code></pre>
+
+        <h3>Response Methods</h3>
+
+        <h4>ctx.json(data)</h4>
+        <p>Sends a JSON response. This method automatically sets the <code>Content-Type</code> header to <code>application/json</code> and converts the data parameter to a JSON string. The response is sent immediately and cannot be modified after calling this method.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>data</code> - Any JavaScript value that can be serialized to JSON (objects, arrays, primitives)</li>
+        </ul>
+        <p><strong>Returns:</strong> The context object for method chaining</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">ctx.json({ message: 'Hello' });
+ctx.json([1, 2, 3]);
+ctx.json('string');</code></pre>
+
+        <h4>ctx.send(data)</h4>
+        <p>Sends the HTTP response. The body parameter can be a String, Buffer, or an Object.</p>
+        <pre><code class="language-javascript">ctx.send('Hello World');
+ctx.send(Buffer.from('Hello'));
+ctx.send({ message: 'Hello' });</code></pre>
+
+        <h4>ctx.status(code)</h4>
+        <p>Sets the HTTP status for the response.</p>
+        <pre><code class="language-javascript">ctx.status(404);</code></pre>
+
+        <h4>ctx.redirect(url, status)</h4>
+        <p>Redirects to the URL derived from the specified path, with specified status, a positive integer that corresponds to an HTTP status code.</p>
+        <pre><code class="language-javascript">ctx.redirect('/users', 301);</code></pre>
+
+        <h4>ctx.type(contentType)</h4>
+        <p>Sets the Content-Type HTTP header.</p>
+        <pre><code class="language-javascript">ctx.type('application/json');</code></pre>
+
+        <h4>ctx.ok(data)</h4>
+        <p>Sends a 200 OK response with optional JSON data.</p>
+
+        <h4>ctx.created(data)</h4>
+        <p>Sends a 201 Created response with optional JSON data.</p>
+
+        <h4>ctx.noContent()</h4>
+        <p>Sends a 204 No Content response.</p>
+
+        <h4>ctx.badRequest(message)</h4>
+        <p>Sends a 400 Bad Request response.</p>
+
+        <h4>ctx.unauthorized(message)</h4>
+        <p>Sends a 401 Unauthorized response.</p>
+
+        <h4>ctx.forbidden(message)</h4>
+        <p>Sends a 403 Forbidden response.</p>
+
+        <h4>ctx.notFound(message)</h4>
+        <p>Sends a 404 Not Found response.</p>
+
+        <h4>ctx.conflict(message)</h4>
+        <p>Sends a 409 Conflict response.</p>
+
+        <h4>ctx.unprocessableEntity(message)</h4>
+        <p>Sends a 422 Unprocessable Entity response.</p>
+
+        <h4>ctx.tooManyRequests(message)</h4>
+        <p>Sends a 429 Too Many Requests response.</p>
+
+        <h4>ctx.internalError(message)</h4>
+        <p>Sends a 500 Internal Server Error response.</p>
+
+        <h4>ctx.header(name, value)</h4>
+        <p>Sets the response HTTP header field to value.</p>
+
+        <h4>ctx.cookie(name, value, options)</h4>
+        <p>Sets cookie name to value. The value parameter may be a string or object converted to JSON.</p>
+        <pre><code class="language-javascript">ctx.cookie('name', 'value', {
+  maxAge: 3600000,
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict'
+});</code></pre>
+
+        <h4>ctx.clearCookie(name, options)</h4>
+        <p>Clears the cookie specified by name.</p>
+
+        <h4>ctx.is(mimeType)</h4>
+        <p>Returns true if the incoming request's "Content-Type" HTTP header field matches the MIME type specified by the type parameter.</p>
+
+        <h4>ctx.accepts(types)</h4>
+        <p>Checks if the specified content types are acceptable, based on the request's Accept HTTP header field.</p>
+
+        <h4>ctx.get(field)</h4>
+        <p>Returns the specified HTTP request header field (case-insensitive match).</p>
+      </section>
+
+      <section id="middleware">
+        <h2>Middleware</h2>
+
+        <h3 id="helmet">helmet(options)</h3>
+        <p>Helps secure your app by setting various HTTP headers. This middleware sets security-related HTTP headers to help protect your app from well-known web vulnerabilities. It's not a silver bullet, but it can significantly improve your application's security posture.</p>
+        <p><strong>Returns:</strong> A middleware function</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">import { helmet } from 'turbyoot/middleware';
+
+app.use(helmet());</code></pre>
+        <p><strong>Note:</strong> By default, all security headers are enabled. You can disable specific headers by setting them to <code>false</code> in the options, or customize them by providing specific values.</p>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>contentSecurityPolicy</code></td>
+              <td>Content Security Policy header</td>
+              <td><code>string | boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>crossOriginEmbedderPolicy</code></td>
+              <td>Cross-Origin Embedder Policy</td>
+              <td><code>boolean | string</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>crossOriginOpenerPolicy</code></td>
+              <td>Cross-Origin Opener Policy</td>
+              <td><code>boolean | string</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>crossOriginResourcePolicy</code></td>
+              <td>Cross-Origin Resource Policy</td>
+              <td><code>boolean | string</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>dnsPrefetchControl</code></td>
+              <td>X-DNS-Prefetch-Control header</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>frameguard</code></td>
+              <td>X-Frame-Options header</td>
+              <td><code>boolean | { action?: 'DENY' | 'SAMEORIGIN' }</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>hidePoweredBy</code></td>
+              <td>Remove X-Powered-By header</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>hsts</code></td>
+              <td>Strict-Transport-Security header</td>
+              <td><code>boolean | { maxAge?: number; includeSubDomains?: boolean; preload?: boolean }</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>ieNoOpen</code></td>
+              <td>X-Download-Options header</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>noSniff</code></td>
+              <td>X-Content-Type-Options header</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>referrerPolicy</code></td>
+              <td>Referrer-Policy header</td>
+              <td><code>boolean | string</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>xssFilter</code></td>
+              <td>X-XSS-Protection header</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="cors">cors(options)</h3>
+        <p>Enable CORS (Cross-Origin Resource Sharing) with various options. CORS allows web pages to make requests to a different domain than the one serving the web page. This middleware handles CORS headers and preflight OPTIONS requests.</p>
+        <p><strong>Returns:</strong> A middleware function</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">import { cors } from 'turbyoot/middleware';
+
+app.use(cors({
+  origin: 'https://example.com',
+  credentials: true
+}));</code></pre>
+        <p><strong>Note:</strong> The <code>origin</code> option can be a string, array of strings, or a function that returns a boolean. When set to <code>'*'</code>, all origins are allowed. When using <code>credentials: true</code>, you cannot use <code>origin: '*'</code> for security reasons.</p>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>origin</code></td>
+              <td>Configures the Access-Control-Allow-Origin header</td>
+              <td><code>string | string[] | (origin: string) => boolean</code></td>
+              <td><code>'*'</code></td>
+            </tr>
+            <tr>
+              <td><code>methods</code></td>
+              <td>Configures the Access-Control-Allow-Methods header</td>
+              <td><code>string | string[]</code></td>
+              <td><code>['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE']</code></td>
+            </tr>
+            <tr>
+              <td><code>allowedHeaders</code></td>
+              <td>Configures the Access-Control-Allow-Headers header</td>
+              <td><code>string | string[]</code></td>
+              <td><code>['Content-Type', 'Authorization']</code></td>
+            </tr>
+            <tr>
+              <td><code>exposedHeaders</code></td>
+              <td>Configures the Access-Control-Expose-Headers header</td>
+              <td><code>string | string[]</code></td>
+              <td><code>[]</code></td>
+            </tr>
+            <tr>
+              <td><code>credentials</code></td>
+              <td>Configures the Access-Control-Allow-Credentials header</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>maxAge</code></td>
+              <td>Configures the Access-Control-Max-Age header</td>
+              <td><code>number</code></td>
+              <td><code>86400</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="rate-limit">rateLimit(options)</h3>
+        <p>Basic rate-limiting middleware. Use to limit repeated requests to public APIs and/or endpoints. This helps prevent abuse and ensures fair usage of your API. Rate limiting is based on a sliding window and tracks requests per IP address (or custom key).</p>
+        <p><strong>Returns:</strong> A middleware function</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">import { rateLimit } from 'turbyoot/middleware';
+
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+}));</code></pre>
+        <p><strong>Note:</strong> When the rate limit is exceeded, the middleware returns a 429 Too Many Requests status. The <code>Retry-After</code> header is set to indicate when the client can retry. You can customize the key generator to rate limit by user ID, API key, or any other identifier instead of IP address.</p>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>windowMs</code></td>
+              <td>Time window in milliseconds</td>
+              <td><code>number</code></td>
+              <td><em>required</em></td>
+            </tr>
+            <tr>
+              <td><code>max</code></td>
+              <td>Maximum number of requests per window</td>
+              <td><code>number</code></td>
+              <td><em>required</em></td>
+            </tr>
+            <tr>
+              <td><code>message</code></td>
+              <td>Error message to send</td>
+              <td><code>string</code></td>
+              <td><code>'Too many requests'</code></td>
+            </tr>
+            <tr>
+              <td><code>skip</code></td>
+              <td>Function to skip rate limiting</td>
+              <td><code>(ctx: Context) => boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>keyGenerator</code></td>
+              <td>Function to generate rate limit keys</td>
+              <td><code>(ctx: Context) => string</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="validate">validate(options)</h3>
+        <p>Validates request body, query, params, and headers based on a schema. This middleware ensures that incoming data matches your expected structure and types before it reaches your route handlers. If validation fails, it returns a 400 Bad Request response with details about the validation errors.</p>
+        <p><strong>Returns:</strong> A middleware function</p>
+        <p><strong>Schema Format:</strong></p>
+        <p>Each field in the schema can have the following properties:</p>
+        <ul>
+          <li><code>required</code> - Boolean indicating if the field is required</li>
+          <li><code>type</code> - Expected type: 'string', 'number', 'boolean', 'array', 'object'</li>
+          <li><code>min</code> - Minimum value (for numbers) or length (for strings/arrays)</li>
+          <li><code>max</code> - Maximum value (for numbers) or length (for strings/arrays)</li>
+          <li><code>pattern</code> - Regular expression pattern (for strings)</li>
+          <li><code>enum</code> - Array of allowed values</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">import { validate } from 'turbyoot/middleware';
+
+app.post('/users', validate({
+  schema: {
+    body: {
+      name: { required: true, type: 'string', min: 2, max: 50 },
+      email: { required: true, type: 'string', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+      age: { type: 'number', min: 0, max: 120 }
+    },
+    query: {
+      page: { type: 'number', min: 1 }
+    }
+  }
+}), (ctx) => {
+  ctx.created({ user: ctx.body });
+});</code></pre>
+        <p><strong>Note:</strong> When <code>stripUnknown</code> is enabled, fields not defined in the schema are removed from the request data. When <code>allowUnknown</code> is enabled, extra fields are allowed but not validated.</p>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>schema</code></td>
+              <td>Validation schema object</td>
+              <td><code>ValidationSchema</code></td>
+              <td><em>required</em></td>
+            </tr>
+            <tr>
+              <td><code>allowUnknown</code></td>
+              <td>Allow unknown fields</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>stripUnknown</code></td>
+              <td>Strip unknown fields</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>abortEarly</code></td>
+              <td>Stop validation on first error</td>
+              <td><code>boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="compression">compression(options)</h3>
+        <p>Compress response bodies for all requests that traverse through the middleware.</p>
+        <pre><code class="language-javascript">import { compression } from 'turbyoot/middleware';
+
+app.use(compression());</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>threshold</code></td>
+              <td>Minimum response size to compress (in bytes)</td>
+              <td><code>number</code></td>
+              <td><code>1024</code></td>
+            </tr>
+            <tr>
+              <td><code>level</code></td>
+              <td>Compression level (1-9)</td>
+              <td><code>number</code></td>
+              <td><code>6</code></td>
+            </tr>
+            <tr>
+              <td><code>memLevel</code></td>
+              <td>Memory level for compression</td>
+              <td><code>number</code></td>
+              <td><code>8</code></td>
+            </tr>
+            <tr>
+              <td><code>strategy</code></td>
+              <td>Compression strategy</td>
+              <td><code>number</code></td>
+              <td><code>0</code></td>
+            </tr>
+            <tr>
+              <td><code>chunkSize</code></td>
+              <td>Chunk size for compression</td>
+              <td><code>number</code></td>
+              <td><code>16384</code></td>
+            </tr>
+            <tr>
+              <td><code>windowBits</code></td>
+              <td>Window bits for compression</td>
+              <td><code>number</code></td>
+              <td><code>15</code></td>
+            </tr>
+            <tr>
+              <td><code>filter</code></td>
+              <td>Function to determine if response should be compressed</td>
+              <td><code>(req: IncomingMessage, res: ServerResponse) => boolean</code></td>
+              <td><code>defaultFilter</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="cache">cache(options)</h3>
+        <p>Adds cache control headers to responses.</p>
+        <pre><code class="language-javascript">import { cache } from 'turbyoot/middleware';
+
+app.use(cache({
+  maxAge: 3600,
+  public: true
+}));</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>maxAge</code></td>
+              <td>Cache control max-age in seconds</td>
+              <td><code>number</code></td>
+              <td><code>0</code></td>
+            </tr>
+            <tr>
+              <td><code>public</code></td>
+              <td>Mark response as public</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>private</code></td>
+              <td>Mark response as private</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>noCache</code></td>
+              <td>Disable caching</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>noStore</code></td>
+              <td>Prevent storing response</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>mustRevalidate</code></td>
+              <td>Require revalidation</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>etag</code></td>
+              <td>Enable ETag generation</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>lastModified</code></td>
+              <td>Enable Last-Modified header</td>
+              <td><code>boolean</code></td>
+              <td><code>true</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="timeout">timeout(options)</h3>
+        <p>Terminates request after specified timeout.</p>
+        <pre><code class="language-javascript">import { timeout } from 'turbyoot/middleware';
+
+app.use(timeout({
+  timeout: 5000,
+  onTimeout: (ctx) => {
+    ctx.statusCode = 408;
+  }
+}));</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>timeout</code></td>
+              <td>Timeout in milliseconds</td>
+              <td><code>number</code></td>
+              <td><em>required</em></td>
+            </tr>
+            <tr>
+              <td><code>onTimeout</code></td>
+              <td>Callback function called on timeout</td>
+              <td><code>(ctx: Context) => void</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="logger">logger()</h3>
+        <p>Logs HTTP requests.</p>
+        <pre><code class="language-javascript">import { logger } from 'turbyoot/middleware';
+
+app.use(logger());</code></pre>
+
+        <h3 id="request-id">requestId()</h3>
+        <p>Adds a unique request ID to each request.</p>
+        <pre><code class="language-javascript">import { requestId } from 'turbyoot/middleware';
+
+app.use(requestId());</code></pre>
+      </section>
+
+      <section id="auth">
+        <h2>Auth</h2>
+
+        <h3 id="auth-middleware">auth(options)</h3>
+        <p>Authentication middleware that extracts and resolves user tokens.</p>
+        <pre><code class="language-javascript">import { auth } from 'turbyoot/middleware';
+
+app.use(auth({
+  cookieName: 'auth-token',
+  userResolver: async (token) => {
+    // Resolve user from token
+    return user;
+  }
+}));</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>cookieName</code></td>
+              <td>Name of the authentication cookie</td>
+              <td><code>string</code></td>
+              <td><code>'auth-token'</code></td>
+            </tr>
+            <tr>
+              <td><code>secure</code></td>
+              <td>Mark cookie as secure (HTTPS only)</td>
+              <td><code>boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>httpOnly</code></td>
+              <td>Mark cookie as HTTP only</td>
+              <td><code>boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>sameSite</code></td>
+              <td>SameSite cookie attribute</td>
+              <td><code>'strict' | 'lax' | 'none'</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>tokenExtractor</code></td>
+              <td>Custom function to extract token from request</td>
+              <td><code>(ctx: Context) => string | null</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>userResolver</code></td>
+              <td>Function to resolve user from token</td>
+              <td><code>(token: string) => Promise&lt;AuthUser | null&gt;</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="require-auth">requireAuth()</h3>
+        <p>Middleware that requires authentication. Returns 401 if user is not authenticated.</p>
+        <pre><code class="language-javascript">import { requireAuth } from 'turbyoot/middleware';
+
+app.get('/profile', requireAuth(), (ctx) => {
+  ctx.ok({ user: ctx.state.user });
+});</code></pre>
+
+        <h3 id="require-role">requireRole(roles, roleKey)</h3>
+        <p>Middleware that requires specific roles. Returns 403 if user doesn't have required role.</p>
+        <pre><code class="language-javascript">import { requireRole } from 'turbyoot/middleware';
+
+app.get('/admin', requireRole('admin'), (ctx) => {
+  ctx.ok({ message: 'Admin access' });
+});</code></pre>
+
+        <h3 id="require-permission">requirePermission(permissions, permissionKey)</h3>
+        <p>Middleware that requires specific permissions.</p>
+        <pre><code class="language-javascript">import { requirePermission } from 'turbyoot/middleware';
+
+app.get('/posts', requirePermission('read:posts'), (ctx) => {
+  ctx.ok({ posts: [] });
+});</code></pre>
+
+        <h3 id="set-auth-cookie">setAuthCookie(ctx, token, options, maxAge)</h3>
+        <p>Sets an authentication cookie.</p>
+        <pre><code class="language-javascript">import { setAuthCookie } from 'turbyoot/middleware';
+
+app.post('/login', (ctx) => {
+  const token = generateToken(ctx.body);
+  setAuthCookie(ctx, token, { httpOnly: true }, 86400);
+  ctx.ok({ token });
+});</code></pre>
+
+        <h3 id="clear-auth-cookie">clearAuthCookie(ctx, options)</h3>
+        <p>Clears the authentication cookie.</p>
+        <pre><code class="language-javascript">import { clearAuthCookie } from 'turbyoot/middleware';
+
+app.post('/logout', (ctx) => {
+  clearAuthCookie(ctx, { httpOnly: true });
+  ctx.ok({ message: 'Logged out' });
+});</code></pre>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Turbyoot. MIT License.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

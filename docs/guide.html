@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide - Turbyoot</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+      <a href="index.html" class="nav-logo">Turbyoot</a>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search documentation..." autocomplete="off">
+        <div id="search-results" class="search-results"></div>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="getting-started.html">Getting Started</a></li>
+        <li><a href="guide.html" class="active">Guide</a></li>
+        <li><a href="api.html">API Reference</a></li>
+        <li><a href="https://github.com/SamirHodzic/turbyoot" target="_blank" rel="noopener noreferrer" class="external-link">GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></li>
+        <li>
+          <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="sidebar">
+      <nav class="sidebar-nav">
+        <h3>Guide</h3>
+        <ul>
+          <li><a href="#routing">Routing</a></li>
+          <li><a href="#basic-routing">Basic Routing</a></li>
+          <li><a href="#fluent-api">Fluent API</a></li>
+          <li><a href="#resource-routing">Resource Routing</a></li>
+          <li><a href="#grouped-routes">Grouped Routes</a></li>
+          <li><a href="#middleware">Middleware</a></li>
+          <li><a href="#using-middleware">Using Middleware</a></li>
+          <li><a href="#writing-middleware">Writing Middleware</a></li>
+          <li><a href="#context">Context</a></li>
+          <li><a href="#plugins">Plugins</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <main class="content">
+      <h1>Guide</h1>
+
+      <section id="routing">
+        <h2>Routing</h2>
+        <p>Routing is one of the core features of Turbyoot. It allows you to define how your application responds to different HTTP requests.</p>
+      </section>
+
+      <section id="basic-routing">
+        <h2>Basic Routing</h2>
+        <p>Turbyoot supports all standard HTTP methods: GET, POST, PUT, DELETE, PATCH, OPTIONS, and HEAD.</p>
+        <pre><code class="language-javascript">import { Turbyoot } from 'turbyoot';
+
+const app = new Turbyoot();
+
+app.get('/users', (ctx) => {
+  ctx.ok({ users: [] });
+});
+
+app.post('/users', (ctx) => {
+  ctx.created({ user: ctx.body });
+});
+
+app.put('/users/:id', (ctx) => {
+  ctx.ok({ user: { id: ctx.params.id, ...ctx.body } });
+});
+
+app.del('/users/:id', (ctx) => {
+  ctx.noContent();
+});
+
+app.patch('/users/:id', (ctx) => {
+  ctx.ok({ user: { id: ctx.params.id, ...ctx.body } });
+});</code></pre>
+      </section>
+
+      <section id="fluent-api">
+        <h2>Fluent API</h2>
+        <p>The fluent API provides a chainable syntax for defining routes with shared middleware:</p>
+        <pre><code class="language-javascript">app.route()
+  .use(authMiddleware)
+  .get('/api/users', (ctx) => {
+    ctx.ok({ users: [] });
+  })
+  .post('/api/users', (ctx) => {
+    ctx.created({ user: ctx.body });
+  })
+  .get('/api/posts', (ctx) => {
+    ctx.ok({ posts: [] });
+  });</code></pre>
+        <p>All routes defined in a fluent chain share the middleware applied with <code>.use()</code>.</p>
+      </section>
+
+      <section id="resource-routing">
+        <h2>Resource Routing</h2>
+        <p>Resource routing automatically generates CRUD routes for a resource. This is useful for RESTful APIs:</p>
+        <pre><code class="language-javascript">app.resource('posts', {
+  prefix: '/api',
+  handlers: {
+    index: (ctx) => ctx.ok({ posts: [] }),
+    show: (ctx) => ctx.ok({ post: { id: ctx.params.id } }),
+    create: (ctx) => ctx.created({ post: ctx.body }),
+    update: (ctx) => ctx.ok({ post: { id: ctx.params.id, ...ctx.body } }),
+    destroy: (ctx) => ctx.noContent()
+  }
+});</code></pre>
+        <p>This creates the following routes:</p>
+        <ul>
+          <li><code>GET /api/posts</code> - index</li>
+          <li><code>GET /api/posts/:id</code> - show</li>
+          <li><code>POST /api/posts</code> - create</li>
+          <li><code>PUT /api/posts/:id</code> - update</li>
+          <li><code>DELETE /api/posts/:id</code> - destroy</li>
+        </ul>
+        <p>You can also filter which routes are created using <code>only</code> or <code>except</code>:</p>
+        <pre><code class="language-javascript">app.resource('posts', {
+  only: ['index', 'show'],
+  handlers: {
+    index: (ctx) => ctx.ok({ posts: [] }),
+    show: (ctx) => ctx.ok({ post: { id: ctx.params.id } })
+  }
+});</code></pre>
+      </section>
+
+      <section id="grouped-routes">
+        <h2>Grouped Routes</h2>
+        <p>Group routes with a common prefix and shared middleware:</p>
+        <pre><code class="language-javascript">app.group('/api/v1', (router) => {
+  router
+    .get('/users', (ctx) => ctx.ok({ users: [] }))
+    .post('/users', (ctx) => ctx.created({ user: ctx.body }))
+    .get('/posts', (ctx) => ctx.ok({ posts: [] }));
+});</code></pre>
+        <p>Groups can be nested:</p>
+        <pre><code class="language-javascript">app.group('/api', (router) => {
+  router.group('/v1', (v1Router) => {
+    v1Router.get('/users', (ctx) => ctx.ok({ users: [] }));
+  });
+});</code></pre>
+      </section>
+
+      <section id="middleware">
+        <h2>Middleware</h2>
+        <p>Middleware functions are functions that have access to the context object and the next middleware function in the application's request-response cycle.</p>
+      </section>
+
+      <section id="using-middleware">
+        <h2>Using Middleware</h2>
+        <p>Use <code>app.use()</code> to apply middleware globally:</p>
+        <pre><code class="language-javascript">import { cors, helmet, rateLimit } from 'turbyoot/middleware';
+
+app.use(helmet());
+app.use(cors({ origin: 'https://example.com' }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));</code></pre>
+        <p>You can also apply middleware to specific routes:</p>
+        <pre><code class="language-javascript">app.post('/users', validate({
+  schema: {
+    body: {
+      name: { required: true, type: 'string' },
+      email: { required: true, type: 'string' }
+    }
+  }
+}), (ctx) => {
+  ctx.created({ user: ctx.body });
+});</code></pre>
+      </section>
+
+      <section id="writing-middleware">
+        <h2>Writing Middleware</h2>
+        <p>Middleware functions take two parameters: the context object and a next function. Call <code>next()</code> to pass control to the next middleware:</p>
+        <pre><code class="language-javascript">const logger = async (ctx, next) => {
+  console.log(`${ctx.req.method} ${ctx.req.url}`);
+  await next();
+  console.log(`Response: ${ctx.statusCode}`);
+};
+
+app.use(logger);</code></pre>
+        <p>You can modify the context object to pass data to subsequent middleware and route handlers:</p>
+        <pre><code class="language-javascript">const addTimestamp = async (ctx, next) => {
+  ctx.state.timestamp = Date.now();
+  await next();
+};
+
+app.use(addTimestamp);
+
+app.get('/time', (ctx) => {
+  ctx.ok({ timestamp: ctx.state.timestamp });
+});</code></pre>
+      </section>
+
+      <section id="context">
+        <h2>Context</h2>
+        <p>The context object provides access to the request, response, and various helper methods:</p>
+        <h3>Request Properties</h3>
+        <ul>
+          <li><code>ctx.req</code> - The Node.js HTTP request object</li>
+          <li><code>ctx.params</code> - Route parameters</li>
+          <li><code>ctx.query</code> - Query string parameters</li>
+          <li><code>ctx.body</code> - Request body (parsed automatically)</li>
+          <li><code>ctx.state</code> - State object for passing data between middleware</li>
+        </ul>
+        <h3>Response Methods</h3>
+        <ul>
+          <li><code>ctx.json(data)</code> - Send JSON response</li>
+          <li><code>ctx.send(data)</code> - Send response (auto-detects type)</li>
+          <li><code>ctx.status(code)</code> - Set status code</li>
+          <li><code>ctx.ok(data)</code> - 200 OK</li>
+          <li><code>ctx.created(data)</code> - 201 Created</li>
+          <li><code>ctx.noContent()</code> - 204 No Content</li>
+          <li><code>ctx.badRequest(message)</code> - 400 Bad Request</li>
+          <li><code>ctx.unauthorized(message)</code> - 401 Unauthorized</li>
+          <li><code>ctx.forbidden(message)</code> - 403 Forbidden</li>
+          <li><code>ctx.notFound(message)</code> - 404 Not Found</li>
+          <li><code>ctx.internalError(message)</code> - 500 Internal Server Error</li>
+        </ul>
+      </section>
+
+      <section id="plugins">
+        <h2>Plugins</h2>
+        <p>Turbyoot supports a plugin system for extending functionality. Plugins allow you to modularize your application, create reusable functionality, and organize related features. Plugins are installed immediately when registered and have full access to the application instance.</p>
+        
+        <h3>Basic Plugin</h3>
+        <p>The simplest plugin adds middleware or routes:</p>
+        <pre><code class="language-javascript">const myPlugin = {
+  name: 'my-plugin',
+  version: '1.0.0',
+  install(app) {
+    app.use(async (ctx, next) => {
+      console.log('Plugin middleware');
+      await next();
+    });
+  }
+};
+
+app.plugin(myPlugin);</code></pre>
+
+        <h3>Plugin with Routes</h3>
+        <p>Plugins can add routes, including grouped routes:</p>
+        <pre><code class="language-javascript">app.plugin({
+  name: 'api-plugin',
+  version: '1.0.0',
+  install(app) {
+    app.group('/api', (router) => {
+      router.get('/users', (ctx) => ctx.ok({ users: [] }));
+      router.post('/users', (ctx) => ctx.created({ user: ctx.body }));
+    });
+  }
+});</code></pre>
+
+        <h3>Configurable Plugins</h3>
+        <p>Create plugin factories for configurable plugins:</p>
+        <pre><code class="language-javascript">function createAuthPlugin(options) {
+  return {
+    name: 'auth-plugin',
+    version: '1.0.0',
+    install(app) {
+      app.use(auth({
+        cookieName: options.cookieName || 'auth-token',
+        userResolver: options.userResolver
+      }));
+      
+      app.get('/login', (ctx) => {
+        // Login logic
+      });
+      
+      app.post('/logout', (ctx) => {
+        clearAuthCookie(ctx, options);
+        ctx.ok({ message: 'Logged out' });
+      });
+    }
+  };
+}
+
+app.plugin(createAuthPlugin({
+  cookieName: 'session',
+  userResolver: async (token) => {
+    // Resolve user from token
+    return user;
+  }
+}));</code></pre>
+
+        <h3>Async Plugins</h3>
+        <p>Plugins can be async, useful for initializing connections or loading configuration:</p>
+        <pre><code class="language-javascript">app.plugin({
+  name: 'database-plugin',
+  version: '1.0.0',
+  async install(app) {
+    const db = await connectToDatabase(process.env.DATABASE_URL);
+    
+    app.use(async (ctx, next) => {
+      ctx.state.db = db;
+      await next();
+    });
+    
+    app.get('/health', async (ctx) => {
+      const isHealthy = await ctx.state.db.ping();
+      ctx.ok({ database: isHealthy ? 'healthy' : 'unhealthy' });
+    });
+  }
+});</code></pre>
+
+        <h3>Plugin Best Practices</h3>
+        <ul>
+          <li><strong>Organization:</strong> Use plugins to group related functionality (authentication, database, API routes, etc.)</li>
+          <li><strong>Reusability:</strong> Create plugin factories for functionality you want to reuse across projects</li>
+          <li><strong>Initialization:</strong> Use async plugins for database connections, external service setup, etc.</li>
+          <li><strong>Order Matters:</strong> Plugins are installed in registration order, so register dependencies first</li>
+          <li><strong>Naming:</strong> Use descriptive names and include version numbers for plugin management</li>
+        </ul>
+
+        <h3>Plugin Use Cases</h3>
+        <ul>
+          <li>Adding authentication middleware and routes</li>
+          <li>Setting up database connections and models</li>
+          <li>Registering API route groups</li>
+          <li>Adding logging, monitoring, or analytics</li>
+          <li>Integrating third-party services</li>
+          <li>Creating modular application features</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Turbyoot. MIT License.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

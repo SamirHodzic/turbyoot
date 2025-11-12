@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started - Turbyoot</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+      <a href="index.html" class="nav-logo">Turbyoot</a>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search documentation..." autocomplete="off">
+        <div id="search-results" class="search-results"></div>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="getting-started.html" class="active">Getting Started</a></li>
+        <li><a href="guide.html">Guide</a></li>
+        <li><a href="api.html">API Reference</a></li>
+        <li><a href="https://github.com/SamirHodzic/turbyoot" target="_blank" rel="noopener noreferrer" class="external-link">GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></li>
+        <li>
+          <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="sidebar">
+      <nav class="sidebar-nav">
+        <h3>Documentation</h3>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html" class="active">Getting Started</a></li>
+          <li><a href="guide.html">Guide</a></li>
+          <li><a href="api.html">API Reference</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <main class="content">
+      <h1>Getting Started</h1>
+
+      <section id="installation">
+        <h2>Installation</h2>
+        <p>Before installing, make sure you have <a href="https://nodejs.org/" target="_blank">Node.js</a> version 20 or higher installed.</p>
+        <p>Installation is done using the <code>npm install</code> command:</p>
+        <pre><code class="language-bash">npm install turbyoot</code></pre>
+      </section>
+
+      <section id="hello-world">
+        <h2>Hello World</h2>
+        <p>The quickest way to get started with Turbyoot:</p>
+        <pre><code class="language-javascript">import { Turbyoot } from 'turbyoot';
+
+const app = new Turbyoot();
+
+app.get('/', (ctx) => {
+  ctx.ok({ message: 'Hello World' });
+});
+
+app.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
+});</code></pre>
+        <p>Save this code in a file called <code>app.js</code> and run it with:</p>
+        <pre><code class="language-bash">node app.js</code></pre>
+        <p>Then, load <code>http://localhost:3000</code> in a browser to see the output.</p>
+      </section>
+
+      <section id="basic-routing">
+        <h2>Basic Routing</h2>
+        <p>Routing refers to determining how an application responds to a client request to a particular endpoint, which is a URI (or path) and a specific HTTP request method (GET, POST, and so on).</p>
+        <p>Each route can have one or more handler functions, which are executed when the route is matched.</p>
+        <p>Route definition takes the following structure:</p>
+        <pre><code class="language-javascript">app.METHOD(path, handler)</code></pre>
+        <p>Where:</p>
+        <ul>
+          <li><code>app</code> is an instance of Turbyoot</li>
+          <li><code>METHOD</code> is an HTTP request method, in lowercase</li>
+          <li><code>path</code> is a path on the server</li>
+          <li><code>handler</code> is the function executed when the route is matched</li>
+        </ul>
+        <p>The following examples illustrate defining simple routes.</p>
+        <pre><code class="language-javascript">app.get('/', (ctx) => {
+  ctx.ok({ message: 'Hello World!' });
+});
+
+app.post('/users', (ctx) => {
+  ctx.created({ user: ctx.body });
+});
+
+app.put('/users/:id', (ctx) => {
+  ctx.ok({ user: { id: ctx.params.id, ...ctx.body } });
+});
+
+app.del('/users/:id', (ctx) => {
+  ctx.noContent();
+});</code></pre>
+      </section>
+
+      <section id="route-parameters">
+        <h2>Route Parameters</h2>
+        <p>Route parameters are named URL segments that are used to capture the values specified at their position in the URL. The captured values are populated in the <code>ctx.params</code> object.</p>
+        <pre><code class="language-javascript">app.get('/users/:userId/posts/:postId', (ctx) => {
+  ctx.ok({
+    userId: ctx.params.userId,
+    postId: ctx.params.postId
+  });
+});</code></pre>
+      </section>
+
+      <section id="response-methods">
+        <h2>Response Methods</h2>
+        <p>The context object provides intuitive response methods:</p>
+        <pre><code class="language-javascript">app.get('/users/:id', (ctx) => {
+  ctx.ok({ user: userData });           // 200 OK
+  ctx.created({ user: newUser });        // 201 Created
+  ctx.badRequest('Invalid data');         // 400 Bad Request
+  ctx.unauthorized('Login required');     // 401 Unauthorized
+  ctx.notFound('User not found');         // 404 Not Found
+  ctx.internalError('Error');             // 500 Internal Server Error
+});</code></pre>
+      </section>
+
+      <section id="next-steps">
+        <h2>Next Steps</h2>
+        <p>Now that you have a basic understanding of Turbyoot, you can:</p>
+        <ul>
+          <li>Read the <a href="guide.html">Guide</a> to learn about advanced features</li>
+          <li>Check out the <a href="api.html">API Reference</a> for detailed documentation</li>
+          <li>Explore the <a href="https://github.com/SamirHodzic/turbyoot/tree/main/examples" target="_blank">examples</a> in the repository</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Turbyoot. MIT License.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

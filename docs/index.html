@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turbyoot - A modern Node.js web framework</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+      <a href="index.html" class="nav-logo">Turbyoot</a>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search documentation..." autocomplete="off">
+        <div id="search-results" class="search-results"></div>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="getting-started.html">Getting Started</a></li>
+        <li><a href="guide.html">Guide</a></li>
+        <li><a href="api.html">API Reference</a></li>
+        <li><a href="https://github.com/SamirHodzic/turbyoot" target="_blank" rel="noopener noreferrer" class="external-link">GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></li>
+        <li>
+          <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <svg class="theme-icon-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="theme-icon-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="sidebar">
+      <nav class="sidebar-nav">
+        <h3>Documentation</h3>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="getting-started.html">Getting Started</a></li>
+          <li><a href="guide.html">Guide</a></li>
+          <li>
+            <a href="guide.html#routing">Routing</a>
+            <ul>
+              <li><a href="guide.html#basic-routing">Basic Routing</a></li>
+              <li><a href="guide.html#fluent-api">Fluent API</a></li>
+              <li><a href="guide.html#resource-routing">Resource Routing</a></li>
+              <li><a href="guide.html#grouped-routes">Grouped Routes</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="guide.html#middleware">Middleware</a>
+            <ul>
+              <li><a href="guide.html#using-middleware">Using Middleware</a></li>
+              <li><a href="guide.html#writing-middleware">Writing Middleware</a></li>
+            </ul>
+          </li>
+          <li><a href="api.html">API Reference</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <main class="content">
+      <div class="hero">
+        <div class="hero-title">
+          <h1 class="framework-name">Turbyoot</h1>
+          <span class="framework-version">0.2.2</span>
+        </div>
+        <p class="hero-tagline">A modern, simple and intuitive Node.js web framework that makes building APIs simple and enjoyable.</p>
+        <div class="install-command">
+          <pre><code class="language-bash">$ npm install turbyoot</code></pre>
+        </div>
+        <div class="hero-code">
+          <pre><code class="language-javascript">import { Turbyoot } from 'turbyoot';
+const app = new Turbyoot();
+const port = 3000;
+
+app.get('/', (ctx) => {
+  ctx.ok({ message: 'Hello World!' });
+});
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});</code></pre>
+        </div>
+      </div>
+
+      <section class="features-grid">
+        <div class="feature-item">
+          <h2>Zero Dependencies</h2>
+          <p>Lightweight framework with no external runtime dependencies, keeping your application lean and fast.</p>
+        </div>
+        <div class="feature-item">
+          <h2>Fluent API</h2>
+          <p>Chainable, intuitive syntax for clean and readable code that makes routing a pleasure.</p>
+        </div>
+        <div class="feature-item">
+          <h2>Resource Routing</h2>
+          <p>Automatic CRUD routes with custom handlers and filtering, reducing boilerplate code significantly.</p>
+        </div>
+        <div class="feature-item">
+          <h2>Grouped Routes</h2>
+          <p>Organize routes with prefixes and shared middleware for better code organization and maintainability.</p>
+        </div>
+        <div class="feature-item">
+          <h2>Plugin System</h2>
+          <p>Extend functionality with a clean plugin architecture that makes your code modular and reusable.</p>
+        </div>
+        <div class="feature-item">
+          <h2>TypeScript Support</h2>
+          <p>Built with TypeScript, providing full type safety out of the box for a better development experience.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Turbyoot. MIT License.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

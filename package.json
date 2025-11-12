@@ -1,10 +1,10 @@
 {
   "name": "turbyoot",
   "description": "A modern, intuitive Node.js web framework that makes building APIs simple and enjoyable.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "SamirHodzic <samir.sgd@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/SamirHodzic/turbyoot#readme",
+  "homepage": "https://github.com/SamirHodzic/turbyoot",
   "repository": {
     "type": "git",
     "url": "https://github.com/SamirHodzic/turbyoot.git"
