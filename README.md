@@ -1,9 +1,9 @@
 # Turbyoot
 
-[![npm version](https://badgen.net/npm/v/turbyoot)](https://www.npmjs.com/package/turbyoot)
-[![GitHub Actions](https://github.com/SamirHodzic/turbyoot/actions/workflows/ci.yml/badge.svg)](https://github.com/SamirHodzic/turbyoot/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org/)
+[![npm version](https://badgers.space/npm/version/turbyoot)](https://www.npmjs.com/package/turbyoot)
+[![GitHub Actions](https://badgers.space/github/checks/SamirHodzic/turbyoot)](https://github.com/SamirHodzic/turbyoot/actions)
+[![License: MIT](https://badgers.space/github/license/SamirHodzic/turbyoot)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://badgers.space/badge/node/%3E=20/orange)](https://nodejs.org/)
 
 **A modern, simple and intuitive Node.js web framework that makes building APIs simple and enjoyable.**
 
