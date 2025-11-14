@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = new Turbyoot();
-const port = 3443;
 
 app.get('/', (ctx) => {
   ctx.ok({
@@ -29,7 +28,7 @@ try {
   const cert = readFileSync(join(__dirname, 'cert.pem'));
 
   app.listen(
-    port,
+    3000,
     {
       protocol: 'https',
       https: {
@@ -38,7 +37,7 @@ try {
       },
     },
     () => {
-      console.log(`Turyboot is running on https://localhost:${port}`);
+      console.log('Turyboot is running on https://localhost:3000');
     },
   );
 } catch (error) {
