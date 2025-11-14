@@ -1,7 +1,7 @@
 # Turbyoot
 
 [![npm version](https://badgers.space/npm/version/turbyoot)](https://www.npmjs.com/package/turbyoot)
-[![GitHub Actions](https://badgers.space/github/checks/SamirHodzic/turbyoot)](https://github.com/SamirHodzic/turbyoot/actions)
+[![GitHub Actions](https://badgers.space/github/checks/SamirHodzic/turbyoot/main)](https://github.com/SamirHodzic/turbyoot/actions)
 [![License: MIT](https://badgers.space/github/license/SamirHodzic/turbyoot)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://badgers.space/badge/node/%3E=20/orange)](https://nodejs.org/)
 
