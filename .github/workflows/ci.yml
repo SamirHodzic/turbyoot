@@ -39,9 +39,15 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Generate test certificates
+      run: |
+        mkdir -p tests/fixtures/certs
+        openssl req -x509 -newkey rsa:2048 -keyout tests/fixtures/certs/test-key.pem -out tests/fixtures/certs/test-cert.pem -days 365 -nodes -subj "/C=US/ST=Test/L=Test/O=Test/CN=localhost" 2>/dev/null || echo "Warning: OpenSSL not available on this platform"
+      shell: bash
+      continue-on-error: true
+    
     - name: Run linter
       run: npm run lint
     
     - name: Run tests
       run: npm run test:coverage
-

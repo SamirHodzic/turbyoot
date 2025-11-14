@@ -259,3 +259,55 @@ export interface AuthOptions {
   tokenExtractor?: (ctx: Context) => string | null;
   userResolver?: (token: string) => Promise<AuthUser | null>;
 }
+
+export interface HttpsOptions {
+  key: string | Buffer | Array<Buffer | object>;
+  cert: string | Buffer | Array<string | Buffer>;
+  ca?: string | Buffer | Array<string | Buffer>;
+  pfx?: string | Buffer | Array<string | Buffer | object>;
+  passphrase?: string;
+  secureProtocol?: string;
+  secureOptions?: number;
+  ciphers?: string;
+  honorCipherOrder?: boolean;
+  requestCert?: boolean;
+  rejectUnauthorized?: boolean;
+  sessionIdContext?: string;
+  ticketKeys?: Buffer;
+  [key: string]: any;
+}
+
+export interface Http2Options {
+  maxDeflateDynamicTableSize?: number;
+  maxSettings?: number;
+  maxSessionMemory?: number;
+  maxHeaderListPairs?: number;
+  maxOutstandingPings?: number;
+  maxReservedRemoteStreams?: number;
+  maxSendHeaderBlockLength?: number;
+  paddingStrategy?: number;
+  peerMaxConcurrentStreams?: number;
+  settings?: {
+    headerTableSize?: number;
+    enablePush?: boolean;
+    initialWindowSize?: number;
+    maxFrameSize?: number;
+    maxConcurrentStreams?: number;
+    maxHeaderListSize?: number;
+    enableConnectProtocol?: boolean;
+  };
+  allowHTTP1?: boolean;
+  origins?: string[];
+  unknownProtocolTimeout?: number;
+  [key: string]: any;
+}
+
+export interface ServerOptions {
+  protocol?: 'http' | 'https' | 'http2';
+  https?: HttpsOptions;
+  http2?: Http2Options;
+  host?: string;
+  backlog?: number;
+  exclusive?: boolean;
+  ipv6Only?: boolean;
+}

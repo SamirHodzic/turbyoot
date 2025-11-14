@@ -101,3 +101,11 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# Test certificates (should not be committed - contain private keys)
+tests/fixtures/certs/*.pem
+tests/fixtures/certs/*.key
+tests/fixtures/certs/*.crt
+
+# TODO
+TODO.md

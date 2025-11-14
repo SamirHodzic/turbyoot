@@ -55,6 +55,7 @@
           <li><a href="#writing-middleware">Writing Middleware</a></li>
           <li><a href="#context">Context</a></li>
           <li><a href="#plugins">Plugins</a></li>
+          <li><a href="#https-http2">HTTPS & HTTP/2</a></li>
         </ul>
       </nav>
     </div>
@@ -337,6 +338,101 @@ app.plugin(createAuthPlugin({
           <li>Adding logging, monitoring, or analytics</li>
           <li>Integrating third-party services</li>
           <li>Creating modular application features</li>
+        </ul>
+      </section>
+
+      <section id="https-http2">
+        <h2>HTTPS & HTTP/2</h2>
+        <p>Turbyoot supports HTTP (default), HTTPS, and HTTP/2 protocols. You can configure the protocol and SSL/TLS options when starting the server.</p>
+
+        <h3>HTTPS Server</h3>
+        <p>To run your server with HTTPS, you need to provide SSL/TLS certificates. Here's how to set it up:</p>
+        <pre><code class="language-javascript">import { readFileSync } from 'fs';
+import { Turbyoot } from 'turbyoot';
+
+const app = new Turbyoot();
+
+app.get('/', (ctx) => {
+  ctx.ok({ message: 'Hello from HTTPS!' });
+});
+
+const key = readFileSync('key.pem');
+const cert = readFileSync('cert.pem');
+
+app.listen(3443, {
+  protocol: 'https',
+  https: {
+    key,
+    cert,
+  },
+}, () => {
+  console.log('HTTPS server is running on port 3443');
+});</code></pre>
+
+        <h3>Generating Self-Signed Certificates</h3>
+        <p>For development, you can generate a self-signed certificate using OpenSSL:</p>
+        <pre><code class="language-bash">openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes</code></pre>
+        <p>This creates a certificate valid for 365 days. The <code>-nodes</code> flag creates a certificate without a passphrase.</p>
+
+        <h3>HTTP/2 Server</h3>
+        <p>HTTP/2 provides improved performance with features like multiplexing, header compression, and server push. Turbyoot supports both secure (with TLS) and insecure HTTP/2:</p>
+
+        <h4>Secure HTTP/2</h4>
+        <pre><code class="language-javascript">import { readFileSync } from 'fs';
+import { Turbyoot } from 'turbyoot';
+
+const app = new Turbyoot();
+
+app.get('/', (ctx) => {
+  ctx.ok({ message: 'Hello from HTTP/2!' });
+});
+
+const key = readFileSync('key.pem');
+const cert = readFileSync('cert.pem');
+
+app.listen(3444, {
+  protocol: 'http2',
+  https: {
+    key,
+    cert,
+  },
+  http2: {
+    allowHTTP1: true,
+    settings: {
+      enablePush: true,
+      initialWindowSize: 65535,
+    },
+  },
+}, () => {
+  console.log('HTTP/2 server is running on port 3444');
+});</code></pre>
+
+        <h4>Insecure HTTP/2 (Development Only)</h4>
+        <pre><code class="language-javascript">app.listen(3444, {
+  protocol: 'http2',
+  http2: {
+    allowHTTP1: true,
+  },
+}, () => {
+  console.log('HTTP/2 server (insecure) is running');
+});</code></pre>
+
+        <h3>Server Options</h3>
+        <p>The <code>listen()</code> method accepts several configuration options:</p>
+        <ul>
+          <li><code>protocol</code> - Protocol to use: <code>'http'</code>, <code>'https'</code>, or <code>'http2'</code></li>
+          <li><code>https</code> - HTTPS/SSL configuration (required for HTTPS and secure HTTP/2)</li>
+          <li><code>http2</code> - HTTP/2 specific options (settings, allowHTTP1, etc.)</li>
+          <li><code>host</code> - Hostname to bind to (defaults to all interfaces)</li>
+          <li><code>backlog</code> - Maximum length of the queue of pending connections</li>
+        </ul>
+
+        <h3>Production Considerations</h3>
+        <ul>
+          <li><strong>Certificates:</strong> Use valid SSL/TLS certificates from a trusted Certificate Authority (CA) in production</li>
+          <li><strong>HTTP/2:</strong> Most browsers require TLS for HTTP/2, so use secure HTTP/2 in production</li>
+          <li><strong>Performance:</strong> HTTP/2 can significantly improve performance for applications with many concurrent requests</li>
+          <li><strong>Fallback:</strong> Enable <code>allowHTTP1: true</code> for HTTP/2 servers to support older clients</li>
         </ul>
       </section>
     </main>
