@@ -261,10 +261,10 @@ export interface AuthOptions {
 }
 
 export interface HttpsOptions {
-  key: string | Buffer | Array<Buffer | Object>;
+  key: string | Buffer | Array<Buffer | object>;
   cert: string | Buffer | Array<string | Buffer>;
   ca?: string | Buffer | Array<string | Buffer>;
-  pfx?: string | Buffer | Array<string | Buffer | Object>;
+  pfx?: string | Buffer | Array<string | Buffer | object>;
   passphrase?: string;
   secureProtocol?: string;
   secureOptions?: number;
