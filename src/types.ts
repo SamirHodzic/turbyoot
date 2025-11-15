@@ -205,6 +205,10 @@ export interface RouterOptions {
   middleware?: Middleware[];
 }
 
+export interface BodyOptions {
+  limit?: number;
+}
+
 export interface FluentRoute {
   get(path: string, handler: RouteHandler): FluentRoute;
   post(path: string, handler: RouteHandler): FluentRoute;

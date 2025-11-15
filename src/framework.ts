@@ -1,11 +1,12 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createHttpsServer, ServerOptions as HttpsServerOptions } from 'https';
 import { createServer as createHttp2Server, createSecureServer, Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { Context, Middleware, RouteHandler, CompiledRoute, FluentRoute, ResourceOptions, Plugin, ServerOptions } from './types.js';
+import { Context, Middleware, RouteHandler, CompiledRoute, FluentRoute, ResourceOptions, Plugin, ServerOptions, BodyOptions } from './types.js';
 import { createContext } from './context.js';
 import { compilePath, matchPath } from './utils/path.js';
 import { parseBody } from './utils/body.js';
 import { parseQueryParams } from './utils/query.js';
+import { sanitize } from './utils/sanitize.js';
 import { errorHandler } from './errors.js';
 import { FluentRouter, PluginManager } from './fluent.js';
 import { serveStatic } from './middleware/static.js';
@@ -16,9 +17,17 @@ export class Turbyoot {
   private middleware: Middleware[] = [];
   private server: any = null;
   private pluginManager: PluginManager = new PluginManager();
+  private bodyLimit: number = 1024 * 1024;
 
   constructor() {
     this.use(errorHandler());
+  }
+
+  configure(options: { body?: BodyOptions }): this {
+    if (options.body?.limit !== undefined) {
+      this.bodyLimit = options.body.limit;
+    }
+    return this;
   }
 
   use(middleware: Middleware): void {
@@ -142,15 +151,23 @@ export class Turbyoot {
       const queryIndex = urlString.indexOf('?');
       const pathname = queryIndex === -1 ? urlString : urlString.slice(0, queryIndex);
       const queryString = queryIndex === -1 ? '' : urlString.slice(queryIndex + 1);
-      const query = queryString ? parseQueryParams(queryString) : {};
+      const rawQuery = queryString ? parseQueryParams(queryString) : {};
+      const query = sanitize(rawQuery);
 
       let body: any = null;
       if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
         const contentType = req.headers['content-type'] || '';
         if (!contentType.includes('multipart/form-data')) {
           try {
-            body = await parseBody(req);
-          } catch (error) {
+            const rawBody = await parseBody(req, { limit: this.bodyLimit });
+            body = sanitize(rawBody);
+          } catch (error: any) {
+            if (error?.message?.includes('exceeds limit')) {
+              res.statusCode = 413;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Payload Too Large', status: 413 }));
+              return;
+            }
             console.error('Body parsing error:', error);
             body = null;
           }
