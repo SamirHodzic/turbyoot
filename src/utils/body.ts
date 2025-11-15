@@ -4,11 +4,24 @@ import { Readable } from 'stream';
 
 type RequestLike = IncomingMessage | Http2ServerRequest | Readable & { headers: Record<string, string | string[] | undefined>; method?: string | null };
 
-export async function parseBody(req: RequestLike): Promise<any> {
+export interface BodyParseOptions {
+  limit?: number;
+}
+
+const DEFAULT_BODY_LIMIT = 1024 * 1024;
+
+export async function parseBody(req: RequestLike, options: BodyParseOptions = {}): Promise<any> {
+  const { limit = DEFAULT_BODY_LIMIT } = options;
   return new Promise((resolve, reject) => {
     let body = '';
+    let bodyLength = 0;
 
     req.on('data', (chunk) => {
+      bodyLength += chunk.length;
+      if (bodyLength > limit) {
+        reject(new Error(`Request body exceeds limit of ${limit} bytes`));
+        return;
+      }
       body += chunk.toString();
     });
 

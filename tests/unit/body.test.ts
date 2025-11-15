@@ -355,6 +355,41 @@ describe('Body Parser', () => {
       const result = await promise;
       expect(result).toEqual(largeData);
     });
+
+    it('should reject body exceeding size limit', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/json'
+      });
+
+      const largeBody = 'x'.repeat(2 * 1024 * 1024);
+      const promise = parseBody(req, { limit: 1024 * 1024 });
+      
+      const chunkSize = 1000;
+      for (let i = 0; i < largeBody.length; i += chunkSize) {
+        req.emitData(Buffer.from(largeBody.slice(i, i + chunkSize)));
+        if (i > 1024 * 1024) {
+          break;
+        }
+      }
+      req.emitEnd();
+
+      await expect(promise).rejects.toThrow('exceeds limit');
+    });
+
+    it('should accept body within size limit', async () => {
+      const req = createMockRequest({
+        'content-type': 'text/plain'
+      });
+
+      const body = 'x'.repeat(100);
+      const promise = parseBody(req, { limit: 1024 * 1024 });
+      
+      req.emitData(Buffer.from(body));
+      req.emitEnd();
+
+      const result = await promise;
+      expect(result).toBe(body);
+    });
   });
 });
 
