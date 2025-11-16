@@ -105,4 +105,61 @@ describe('Basic Routing Integration Tests', () => {
       expect(await response.json()).toEqual({ error: 'Not Found', status: 404 });
     });
   });
+
+  describe('Input Sanitization', () => {
+    it('should sanitize XSS attempts in POST body', async () => {
+      app.post('/sanitize-test', (ctx: any) => {
+        ctx.ok({ received: ctx.body });
+      });
+
+      const response = await fetch(`${baseUrl}/sanitize-test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: '<script>alert("XSS")</script>',
+          bio: '<iframe src="evil.com"></iframe>'
+        })
+      });
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.received.name).toBe('');
+      expect(data.received.bio).toBe('');
+    });
+
+    it('should sanitize XSS attempts in query parameters', async () => {
+      app.get('/sanitize-query', (ctx: any) => {
+        ctx.ok({ query: ctx.query });
+      });
+
+      const maliciousQuery = encodeURIComponent('<script>alert("XSS")</script>');
+      const response = await fetch(`${baseUrl}/sanitize-query?input=${maliciousQuery}`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.query.input).toBe('');
+    });
+
+    it('should preserve safe content while sanitizing malicious content', async () => {
+      app.post('/sanitize-safe', (ctx: any) => {
+        ctx.ok({ received: ctx.body });
+      });
+
+      const response = await fetch(`${baseUrl}/sanitize-safe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: 'John Doe',
+          email: 'john@example.com',
+          bio: '<script>alert("XSS")</script>'
+        })
+      });
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.received.name).toBe('John Doe');
+      expect(data.received.email).toBe('john@example.com');
+      expect(data.received.bio).toBe('');
+    });
+  });
 });

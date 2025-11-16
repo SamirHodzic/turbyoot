@@ -55,6 +55,7 @@
           <li><a href="#writing-middleware">Writing Middleware</a></li>
           <li><a href="#context">Context</a></li>
           <li><a href="#plugins">Plugins</a></li>
+          <li><a href="#security">Security</a></li>
           <li><a href="#https-http2">HTTPS & HTTP/2</a></li>
         </ul>
       </nav>
@@ -339,6 +340,104 @@ app.plugin(createAuthPlugin({
           <li>Integrating third-party services</li>
           <li>Creating modular application features</li>
         </ul>
+      </section>
+
+      <section id="security">
+        <h2>Security</h2>
+        <p>Turbyoot includes built-in security features to help protect your application from common web vulnerabilities.</p>
+
+        <h3>Input Sanitization</h3>
+        <p>Turbyoot automatically sanitizes all request body and query parameters to prevent XSS (Cross-Site Scripting) and injection attacks. This sanitization happens automatically for all incoming requests, so you don't need to configure anything.</p>
+        
+        <p>The framework removes or neutralizes potentially dangerous content including:</p>
+        <ul>
+          <li>Script tags (<code>&lt;script&gt;</code>)</li>
+          <li>Iframe tags (<code>&lt;iframe&gt;</code>)</li>
+          <li>Object and embed tags</li>
+          <li>Event handlers (onclick, onerror, etc.)</li>
+          <li>JavaScript protocol URLs (<code>javascript:</code>)</li>
+          <li>Data URI HTML content (<code>data:text/html</code>)</li>
+        </ul>
+
+        <h4>Body Sanitization</h4>
+        <p>All request bodies (POST, PUT, PATCH) are automatically sanitized:</p>
+        <pre><code class="language-javascript">app.post('/users', (ctx) => {
+  // ctx.body is already sanitized
+  // Malicious content like &lt;script&gt; tags are removed
+  const user = ctx.body;
+  ctx.created({ user });
+});</code></pre>
+
+        <h4>Query Parameter Sanitization</h4>
+        <p>All query parameters are automatically sanitized:</p>
+        <pre><code class="language-javascript">app.get('/search', (ctx) => {
+  // ctx.query is already sanitized
+  // Malicious content in query strings is removed
+  const query = ctx.query.q;
+  ctx.ok({ results: search(query) });
+});</code></pre>
+
+        <h4>What Gets Sanitized</h4>
+        <p>The sanitization process:</p>
+        <ul>
+          <li>Works recursively on nested objects and arrays</li>
+          <li>Preserves safe content (plain text, numbers, booleans)</li>
+          <li>Removes dangerous HTML tags and attributes</li>
+          <li>Handles deeply nested structures up to a configurable depth</li>
+        </ul>
+
+        <h3>Security Middleware</h3>
+        <p>Turbyoot provides several security middleware functions to help protect your application. For complete API documentation, see the <a href="api.html#middleware">Middleware section in the API Reference</a>.</p>
+        
+        <p><strong>Available security middleware:</strong></p>
+        <ul>
+          <li><strong>helmet()</strong> - Sets HTTP security headers (CSP, X-Frame-Options, HSTS, etc.)</li>
+          <li><strong>cors()</strong> - Configures Cross-Origin Resource Sharing</li>
+          <li><strong>rateLimit()</strong> - Limits requests per IP to prevent abuse</li>
+          <li><strong>csrf()</strong> - Protects against Cross-Site Request Forgery attacks</li>
+        </ul>
+
+        <p><strong>Basic setup:</strong></p>
+        <pre><code class="language-javascript">import { helmet, cors, rateLimit, csrf } from 'turbyoot/middleware';
+
+app.use(helmet());
+app.use(cors({ origin: 'https://example.com' }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+app.use(csrf());</code></pre>
+
+        <p><strong>When to use CSRF protection:</strong></p>
+        <ul>
+          <li>Use when your app uses cookies for authentication</li>
+          <li>Use for state-changing operations (POST, PUT, DELETE, PATCH)</li>
+          <li>Skip for public APIs or token-based authentication (not cookies)</li>
+          <li>Skip for webhook endpoints that receive requests from external services</li>
+        </ul>
+
+        <h3>Body Size Limits</h3>
+        <p>Request bodies are limited to prevent DoS attacks. You can configure the limit using the <code>configure()</code> method:</p>
+        <pre><code class="language-javascript">import { Turbyoot } from 'turbyoot';
+
+const app = new Turbyoot();
+
+app.configure({
+  body: {
+    limit: 2 * 1024 * 1024 // 2MB
+  }
+});</code></pre>
+        <p>The default limit is 1MB. Requests exceeding the limit will receive a <code>413 Payload Too Large</code> response.</p>
+
+        <h3>Security Best Practices</h3>
+        <ul>
+          <li><strong>Always use HTTPS in production:</strong> Encrypt all traffic to protect sensitive data</li>
+          <li><strong>Use security middleware:</strong> Enable helmet() and configure CORS appropriately</li>
+          <li><strong>Implement rate limiting:</strong> Protect your API from abuse and DDoS attacks</li>
+          <li><strong>Validate input:</strong> While sanitization helps, always validate input data structure and types</li>
+          <li><strong>Use parameterized queries:</strong> When using databases, always use parameterized queries to prevent SQL injection</li>
+          <li><strong>Keep dependencies updated:</strong> Regularly update Turbyoot and other dependencies for security patches</li>
+          <li><strong>Don't trust client data:</strong> Always validate and sanitize data from clients, even after sanitization</li>
+        </ul>
+
+        <p><strong>Note:</strong> While Turbyoot provides automatic sanitization and security middleware, security is a multi-layered approach. Always follow security best practices and perform regular security audits of your application.</p>
       </section>
 
       <section id="https-http2">

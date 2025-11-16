@@ -395,7 +395,7 @@ const app = new Turbyoot();</code></pre>
         <p><strong>Examples:</strong></p>
         <p><strong>HTTP (default):</strong></p>
         <pre><code class="language-javascript">app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+  console.log('Turbyoot is running on port 3000');
 });</code></pre>
         <p><strong>HTTPS:</strong></p>
         <pre><code class="language-javascript">import { readFileSync } from 'fs';
@@ -444,6 +444,31 @@ app.listen(3444, {
   console.log('HTTP/2 server (insecure) is running on port 3444');
 });</code></pre>
         <p><strong>Note:</strong> Once <code>listen()</code> is called, the server will start processing requests. Make sure all routes and middleware are defined before calling this method. When using HTTPS or secure HTTP/2, you must provide valid SSL/TLS certificates.</p>
+
+        <h3 id="app-configure">app.configure(options)</h3>
+        <p>Configures framework options. This method allows you to set various framework-level configurations after instantiation.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>options</code> - Configuration object
+            <ul>
+              <li><code>body</code> - Body parsing configuration
+                <ul>
+                  <li><code>limit</code> - Maximum request body size in bytes (default: 1048576 / 1MB)</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <p><strong>Returns:</strong> The Turbyoot instance for method chaining</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">const app = new Turbyoot();
+
+app.configure({
+  body: {
+    limit: 2 * 1024 * 1024 // 2MB
+  }
+});</code></pre>
+        <p><strong>Note:</strong> Configuration should be set before starting the server with <code>listen()</code>.</p>
 
         <h3 id="app-close">app.close()</h3>
         <p>Closes the server, stopping it from accepting new connections.</p>
@@ -548,22 +573,23 @@ app.plugin(createDatabasePlugin({
 });</code></pre>
 
         <h4>ctx.query</h4>
-        <p>An object containing parsed query string parameters from the URL. Query parameters are automatically parsed from the URL's query string (the part after <code>?</code>).</p>
+        <p>An object containing parsed query string parameters from the URL. Query parameters are automatically parsed from the URL's query string (the part after <code>?</code>). All query parameters are automatically sanitized to prevent XSS and injection attacks.</p>
         <pre><code class="language-javascript">// For URL: /users?page=1&limit=10&sort=name
 app.get('/users', (ctx) => {
   console.log(ctx.query.page);   // '1'
   console.log(ctx.query.limit);  // '10'
   console.log(ctx.query.sort);   // 'name'
 });</code></pre>
+        <p><strong>Note:</strong> Query parameters are automatically sanitized by the framework. Malicious content such as script tags, iframes, and event handlers are removed to prevent XSS attacks.</p>
 
         <h4>ctx.body</h4>
-        <p>The parsed request body. Turbyoot automatically parses JSON, URL-encoded, and text request bodies. For POST, PUT, and PATCH requests, the body is parsed based on the <code>Content-Type</code> header. Multipart/form-data is not automatically parsed to allow for streaming file uploads.</p>
+        <p>The parsed request body. Turbyoot automatically parses JSON, URL-encoded, and text request bodies. For POST, PUT, and PATCH requests, the body is parsed based on the <code>Content-Type</code> header. Multipart/form-data is not automatically parsed to allow for streaming file uploads. All body content is automatically sanitized to prevent XSS and injection attacks.</p>
         <pre><code class="language-javascript">app.post('/users', (ctx) => {
   const userData = ctx.body;  // Already parsed JSON object
   console.log(userData.name);
   console.log(userData.email);
 });</code></pre>
-        <p><strong>Note:</strong> The body is only parsed for POST, PUT, and PATCH requests. For other methods, <code>ctx.body</code> will be <code>null</code>.</p>
+        <p><strong>Note:</strong> The body is only parsed for POST, PUT, and PATCH requests. For other methods, <code>ctx.body</code> will be <code>null</code>. All body content is automatically sanitized to remove potentially dangerous HTML tags, script tags, iframes, and event handlers to prevent XSS attacks.</p>
 
         <h4>ctx.statusCode</h4>
         <p>The HTTP status code for the response. You can set this directly, but it's recommended to use the helper methods like <code>ctx.ok()</code>, <code>ctx.notFound()</code>, etc.</p>
@@ -828,6 +854,80 @@ app.use(cors({
             </tr>
           </tbody>
         </table>
+
+        <h3 id="csrf">csrf(options)</h3>
+        <p>Protects against Cross-Site Request Forgery (CSRF) attacks. This middleware implements the double-submit cookie pattern, where a token is stored in a cookie and must be sent in a header for state-changing requests.</p>
+        <p><strong>Returns:</strong> A middleware function</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">import { csrf } from 'turbyoot/middleware';
+
+app.use(csrf());</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>cookieName</code></td>
+              <td>Name of the CSRF token cookie</td>
+              <td><code>string</code></td>
+              <td><code>'csrf-token'</code></td>
+            </tr>
+            <tr>
+              <td><code>headerName</code></td>
+              <td>Name of the header containing the CSRF token</td>
+              <td><code>string</code></td>
+              <td><code>'X-CSRF-Token'</code></td>
+            </tr>
+            <tr>
+              <td><code>secret</code></td>
+              <td>Secret used to sign tokens (auto-generated if not provided)</td>
+              <td><code>string</code></td>
+              <td><code>random</code></td>
+            </tr>
+            <tr>
+              <td><code>cookieOptions</code></td>
+              <td>Cookie options (httpOnly, secure, sameSite, maxAge)</td>
+              <td><code>object</code></td>
+              <td><code>{ httpOnly: true, secure: false, sameSite: 'lax', maxAge: 86400 }</code></td>
+            </tr>
+            <tr>
+              <td><code>skipMethods</code></td>
+              <td>HTTP methods to skip CSRF validation</td>
+              <td><code>string[]</code></td>
+              <td><code>['GET', 'HEAD', 'OPTIONS']</code></td>
+            </tr>
+            <tr>
+              <td><code>skipPaths</code></td>
+              <td>URL paths to skip CSRF validation</td>
+              <td><code>string[]</code></td>
+              <td><code>[]</code></td>
+            </tr>
+            <tr>
+              <td><code>skip</code></td>
+              <td>Function to determine if CSRF should be skipped</td>
+              <td><code>(ctx: Context) => boolean</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>Usage:</strong></p>
+        <p>On GET/HEAD/OPTIONS requests, the middleware sets a CSRF token cookie and makes it available in <code>ctx.state.csrfToken</code>. For POST/PUT/DELETE/PATCH requests, the token must be sent in the specified header and must match the cookie value.</p>
+        <pre><code class="language-javascript">app.use(csrf({
+  cookieName: 'csrf-token',
+  headerName: 'X-CSRF-Token',
+  cookieOptions: {
+    secure: true,
+    sameSite: 'strict'
+  },
+  skipPaths: ['/api/webhook']
+}));</code></pre>
 
         <h3 id="rate-limit">rateLimit(options)</h3>
         <p>Basic rate-limiting middleware. Use to limit repeated requests to public APIs and/or endpoints. This helps prevent abuse and ensures fair usage of your API. Rate limiting is based on a sliding window and tracks requests per IP address (or custom key).</p>
