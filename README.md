@@ -119,7 +119,11 @@ app.group('/api/v1', (router) => {
 import { cors, helmet, rateLimit, validate } from 'turbyoot/middleware';
 
 app.use(helmet());
-app.use(cors({ origin: 'https://example.com' }));
+app.use(cors({ 
+  origin: 'https://example.com',
+  credentials: true,
+  preflightCacheControl: true
+}));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 app.post('/users', validate({

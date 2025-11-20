@@ -376,7 +376,7 @@ const searchIndex = [
         content: 'Built-in middleware functions for security, validation, compression, caching, and more.',
       },
       { title: 'helmet()', content: 'Security middleware to set various HTTP headers for protection.' },
-      { title: 'cors()', content: 'Cross-Origin Resource Sharing middleware.' },
+      { title: 'cors()', content: 'Cross-Origin Resource Sharing middleware with preflight caching, dynamic origin validation, and credentials handling.' },
       { title: 'rateLimit()', content: 'Rate limiting middleware to prevent abuse.' },
       { title: 'validate()', content: 'Request validation middleware with schema support.' },
       { title: 'compression()', content: 'Response compression middleware using gzip or deflate.' },
