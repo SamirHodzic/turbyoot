@@ -1,9 +1,19 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createHttpsServer, ServerOptions as HttpsServerOptions } from 'https';
 import { createServer as createHttp2Server, createSecureServer, Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { Context, Middleware, RouteHandler, CompiledRoute, FluentRoute, ResourceOptions, Plugin, ServerOptions, BodyOptions } from './types.js';
+import {
+  Context,
+  Middleware,
+  RouteHandler,
+  CompiledRoute,
+  FluentRoute,
+  ResourceOptions,
+  Plugin,
+  ServerOptions,
+  BodyOptions,
+} from './types.js';
 import { createContext } from './context.js';
-import { compilePath, matchPath } from './utils/path.js';
+import { compilePath } from './utils/path.js';
 import { parseBody } from './utils/body.js';
 import { parseQueryParams } from './utils/query.js';
 import { sanitize } from './utils/sanitize.js';
@@ -11,9 +21,10 @@ import { errorHandler } from './errors.js';
 import { FluentRouter, PluginManager } from './fluent.js';
 import { serveStatic } from './middleware/static.js';
 import { StaticOptions } from './types.js';
+import { RouteTrie } from './utils/route-trie.js';
 
 export class Turbyoot {
-  private routes: CompiledRoute[] = [];
+  private routeTrie: RouteTrie = new RouteTrie();
   private middleware: Middleware[] = [];
   private server: any = null;
   private pluginManager: PluginManager = new PluginManager();
@@ -45,7 +56,7 @@ export class Turbyoot {
       middleware: finalHandler ? [handlerOrMiddleware as Middleware] : [],
     };
 
-    this.routes.push(route);
+    this.routeTrie.add(route);
   }
 
   get(path: string, handler: RouteHandler): void;
@@ -174,23 +185,13 @@ export class Turbyoot {
         }
       }
 
-      let matchedRoute: CompiledRoute | null = null;
-      let params: Record<string, string> = {};
-      const routesOnPath: CompiledRoute[] = [];
+      const method = req.method || 'GET';
+      const trieResult = this.routeTrie.find(method, pathname);
+      let matchedRoute = trieResult.route;
+      const params = trieResult.params;
+      const routesOnPath = trieResult.routesOnPath;
 
-      for (const route of this.routes) {
-        const match = matchPath(route, pathname);
-        if (match.match) {
-          routesOnPath.push(route);
-          if (route.method === req.method) {
-            matchedRoute = route;
-            params = match.params;
-            break;
-          }
-        }
-      }
-
-      if (req.method === 'OPTIONS' && !matchedRoute && routesOnPath.length > 0) {
+      if (method === 'OPTIONS' && !matchedRoute && routesOnPath.length > 0) {
         const routeMiddleware: Middleware[] = [];
         for (const route of routesOnPath) {
           if (route.middleware) {
