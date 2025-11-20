@@ -1,4 +1,5 @@
 import { Context, Middleware, RouteHandler, RouterOptions } from './types.js';
+import { executeMiddlewareChain } from './utils/middleware-executor.js';
 
 export class Router {
   private routes: Array<{ method: string; path: string; handler: RouteHandler; middleware?: Middleware[] }> = [];
@@ -56,16 +57,7 @@ export class Router {
         }
 
         return async (ctx: Context) => {
-          let middlewareIndex = 0;
-          const executeMiddleware = async (): Promise<void> => {
-            if (middlewareIndex < allMiddleware.length) {
-              const middleware = allMiddleware[middlewareIndex++];
-              await middleware(ctx, executeMiddleware);
-            } else {
-              await route.handler(ctx);
-            }
-          };
-          await executeMiddleware();
+          await executeMiddlewareChain(ctx, allMiddleware, route.handler);
         };
       };
 
