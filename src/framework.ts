@@ -22,6 +22,7 @@ import { FluentRouter, PluginManager } from './fluent.js';
 import { serveStatic } from './middleware/static.js';
 import { StaticOptions } from './types.js';
 import { RouteTrie } from './utils/route-trie.js';
+import { executeMiddlewareChain } from './utils/middleware-executor.js';
 
 export class Turbyoot {
   private routeTrie: RouteTrie = new RouteTrie();
@@ -211,30 +212,17 @@ export class Turbyoot {
 
       const ctx = createContext(req as IncomingMessage, res as ServerResponse, params, query, body);
 
-      let middlewareIndex = 0;
-      const executeMiddleware = async (): Promise<void> => {
-        if (middlewareIndex < this.middleware.length) {
-          const middleware = this.middleware[middlewareIndex++];
-          await middleware(ctx, executeMiddleware);
-        } else if (matchedRoute) {
-          let routeMiddlewareIndex = 0;
-          const executeRouteMiddleware = async (): Promise<void> => {
-            if (routeMiddlewareIndex < (matchedRoute.middleware || []).length) {
-              const middleware = matchedRoute.middleware![routeMiddlewareIndex++];
-              await middleware(ctx, executeRouteMiddleware);
-            } else {
-              await matchedRoute.handler(ctx);
-            }
-          };
-          await executeRouteMiddleware();
-        } else {
+      if (matchedRoute) {
+        const routeMiddleware = matchedRoute.middleware || [];
+        await executeMiddlewareChain(ctx, [...this.middleware, ...routeMiddleware], matchedRoute.handler);
+      } else {
+        const notFoundHandler: RouteHandler = async (ctx) => {
           ctx.statusCode = 404;
           ctx.res.statusCode = 404;
           ctx.json({ error: 'Not Found', status: 404 });
-        }
-      };
-
-      await executeMiddleware();
+        };
+        await executeMiddlewareChain(ctx, this.middleware, notFoundHandler);
+      }
     } catch (error) {
       console.error('Server error:', error);
       if (!res.headersSent) {
