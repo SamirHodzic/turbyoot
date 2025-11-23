@@ -795,16 +795,57 @@ app.use(helmet());</code></pre>
         </table>
 
         <h3 id="cors">cors(options)</h3>
-        <p>Enable CORS (Cross-Origin Resource Sharing) with various options. CORS allows web pages to make requests to a different domain than the one serving the web page. This middleware handles CORS headers and preflight OPTIONS requests.</p>
+        <p>Enable CORS (Cross-Origin Resource Sharing) with various options. CORS allows web pages to make requests to a different domain than the one serving the web page. This middleware handles CORS headers and preflight OPTIONS requests with enhanced features including preflight caching, dynamic origin validation, and improved credentials handling.</p>
         <p><strong>Returns:</strong> A middleware function</p>
-        <p><strong>Example:</strong></p>
+        <p><strong>Basic Example:</strong></p>
         <pre><code class="language-javascript">import { cors } from 'turbyoot/middleware';
 
 app.use(cors({
   origin: 'https://example.com',
   credentials: true
 }));</code></pre>
-        <p><strong>Note:</strong> The <code>origin</code> option can be a string, array of strings, or a function that returns a boolean. When set to <code>'*'</code>, all origins are allowed. When using <code>credentials: true</code>, you cannot use <code>origin: '*'</code> for security reasons.</p>
+        <p><strong>Advanced Examples:</strong></p>
+        <pre><code class="language-javascript">// Wildcard subdomain support
+app.use(cors({
+  origin: '*.example.com'
+}));
+
+// Regex pattern matching
+app.use(cors({
+  origin: /^https:\/\/.*\.example\.com$/
+}));
+
+// Async origin validation (e.g., database lookup)
+app.use(cors({
+  origin: async (origin) => {
+    const allowed = await checkOriginInDatabase(origin);
+    return allowed;
+  }
+}));
+
+// Preflight caching with custom cache control
+app.use(cors({
+  origin: 'https://example.com',
+  maxAge: 3600,
+  preflightCacheControl: 'public, max-age=3600, immutable'
+}));
+
+// Credentials validation
+app.use(cors({
+  origin: 'https://example.com',
+  credentials: true,
+  validateCredentials: async (origin) => {
+    return await validateOriginCredentials(origin);
+  }
+}));</code></pre>
+        <p><strong>Important Notes:</strong></p>
+        <ul>
+          <li>The <code>origin</code> option supports multiple types: string, array of strings, RegExp, or function (sync/async).</li>
+          <li>Wildcard subdomains are supported using patterns like <code>'*.example.com'</code>.</li>
+          <li>When set to <code>'*'</code>, all origins are allowed, but you <strong>cannot</strong> use <code>credentials: true</code> with <code>origin: '*'</code> for security reasons.</li>
+          <li>Async origin validation functions are supported for database lookups or external validation.</li>
+          <li>Preflight caching is automatically enabled to improve performance.</li>
+        </ul>
         <p><strong>Options:</strong></p>
         <table>
           <thead>
@@ -818,8 +859,8 @@ app.use(cors({
           <tbody>
             <tr>
               <td><code>origin</code></td>
-              <td>Configures the Access-Control-Allow-Origin header</td>
-              <td><code>string | string[] | (origin: string) => boolean</code></td>
+              <td>Configures the Access-Control-Allow-Origin header. Supports string, array, RegExp, or function (sync/async). Wildcard subdomains like <code>'*.example.com'</code> are supported.</td>
+              <td><code>string | string[] | RegExp | (origin: string) => boolean | Promise&lt;boolean&gt;</code></td>
               <td><code>'*'</code></td>
             </tr>
             <tr>
@@ -842,15 +883,39 @@ app.use(cors({
             </tr>
             <tr>
               <td><code>credentials</code></td>
-              <td>Configures the Access-Control-Allow-Credentials header</td>
+              <td>Configures the Access-Control-Allow-Credentials header. Cannot be used with <code>origin: '*'</code>.</td>
               <td><code>boolean</code></td>
               <td><code>false</code></td>
             </tr>
             <tr>
               <td><code>maxAge</code></td>
-              <td>Configures the Access-Control-Max-Age header</td>
+              <td>Configures the Access-Control-Max-Age header (in seconds) for preflight caching</td>
               <td><code>number</code></td>
               <td><code>86400</code></td>
+            </tr>
+            <tr>
+              <td><code>preflightCacheControl</code></td>
+              <td>Sets Cache-Control header for preflight requests. Set to <code>false</code> to disable, or provide a custom string value.</td>
+              <td><code>boolean | string</code></td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>validateCredentials</code></td>
+              <td>Custom validation function for credentials. Called with the origin and should return <code>true</code> if credentials are valid. Supports async functions.</td>
+              <td><code>(origin: string) => boolean | Promise&lt;boolean&gt;</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>preflightContinue</code></td>
+              <td>If <code>true</code>, preflight requests continue to the next middleware instead of ending immediately</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>optionsSuccessStatus</code></td>
+              <td>HTTP status code to use for successful OPTIONS requests</td>
+              <td><code>number</code></td>
+              <td><code>204</code></td>
             </tr>
           </tbody>
         </table>

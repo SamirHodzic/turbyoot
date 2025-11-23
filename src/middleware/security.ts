@@ -1,4 +1,4 @@
-import { Context, SecurityOptions, RateLimitOptions } from '../types.js';
+import { Context, SecurityOptions, RateLimitOptions, CorsOptions } from '../types.js';
 
 export function helmet(options: SecurityOptions = {}) {
   return async (ctx: Context, next: () => Promise<void>) => {
@@ -90,18 +90,44 @@ export function helmet(options: SecurityOptions = {}) {
   };
 }
 
-export function cors(
-  options: {
-    origin?: string | string[] | ((origin: string) => boolean);
-    methods?: string | string[];
-    allowedHeaders?: string | string[];
-    exposedHeaders?: string | string[];
-    credentials?: boolean;
-    maxAge?: number;
-    preflightContinue?: boolean;
-    optionsSuccessStatus?: number;
-  } = {},
-) {
+function matchOrigin(
+  reqOrigin: string | undefined,
+  origin: string | string[] | RegExp | ((origin: string) => boolean | Promise<boolean>),
+): boolean | Promise<boolean> {
+  if (!reqOrigin) {
+    return false;
+  }
+
+  if (origin === '*') {
+    return true;
+  }
+
+  if (origin instanceof RegExp) {
+    return origin.test(reqOrigin);
+  }
+
+  if (Array.isArray(origin)) {
+    return origin.includes(reqOrigin);
+  }
+
+  if (typeof origin === 'function') {
+    return origin(reqOrigin);
+  }
+
+  return reqOrigin === origin;
+}
+
+function matchWildcardSubdomain(pattern: string, origin: string): boolean {
+  if (!pattern.includes('*')) {
+    return pattern === origin;
+  }
+
+  const regexPattern = pattern.replace(/\*/g, '[^.]*').replace(/\./g, '\\.');
+  const regex = new RegExp(`^${regexPattern}$`);
+  return regex.test(origin);
+}
+
+export function cors(options: CorsOptions = {}) {
   const {
     origin = '*',
     methods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
@@ -111,30 +137,64 @@ export function cors(
     maxAge = 86400,
     preflightContinue = false,
     optionsSuccessStatus = 204,
+    preflightCacheControl = true,
+    validateCredentials,
   } = options;
 
+  if (credentials && origin === '*') {
+    throw new Error('Cannot use credentials: true with origin: "*". Use a specific origin or origin function instead.');
+  }
+
   return async (ctx: Context, next: () => Promise<void>) => {
-    const reqOrigin = ctx.req.headers.origin;
+    const reqOrigin = ctx.req.headers.origin as string | undefined;
+    let allowedOrigin: string | null = null;
 
     if (origin === '*') {
-      ctx.res.setHeader('Access-Control-Allow-Origin', '*');
-    } else if (typeof origin === 'function') {
-      if (reqOrigin && origin(reqOrigin)) {
-        ctx.res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+      allowedOrigin = '*';
+    } else if (typeof origin === 'string' && origin.includes('*')) {
+      if (reqOrigin && matchWildcardSubdomain(origin, reqOrigin)) {
+        allowedOrigin = reqOrigin;
+      } else if (!reqOrigin && !origin.includes('*')) {
+        allowedOrigin = origin;
+      }
+    } else if (typeof origin === 'string') {
+      if (reqOrigin && reqOrigin === origin) {
+        allowedOrigin = reqOrigin;
+      } else if (!reqOrigin) {
+        allowedOrigin = origin;
       }
     } else if (Array.isArray(origin)) {
       if (reqOrigin && origin.includes(reqOrigin)) {
-        ctx.res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+        allowedOrigin = reqOrigin;
+      }
+    } else if (origin instanceof RegExp) {
+      if (reqOrigin && origin.test(reqOrigin)) {
+        allowedOrigin = reqOrigin;
       }
     } else {
-      if (reqOrigin && reqOrigin === origin) {
-        ctx.res.setHeader('Access-Control-Allow-Origin', reqOrigin);
-      } else if (!reqOrigin) {
-        ctx.res.setHeader('Access-Control-Allow-Origin', origin);
+      if (reqOrigin) {
+        const matchResult = matchOrigin(reqOrigin, origin);
+        const isAllowed = matchResult instanceof Promise ? await matchResult : matchResult;
+        if (isAllowed) {
+          allowedOrigin = reqOrigin;
+        }
       }
     }
 
-    if (credentials) {
+    if (allowedOrigin) {
+      ctx.res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    }
+
+    if (credentials && allowedOrigin) {
+      if (validateCredentials) {
+        const isValid = await validateCredentials(allowedOrigin);
+        if (!isValid) {
+          ctx.statusCode = 403;
+          ctx.res.statusCode = 403;
+          ctx.json({ error: 'Credentials validation failed', status: 403 });
+          return;
+        }
+      }
       ctx.res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
 
@@ -149,6 +209,13 @@ export function cors(
         Array.isArray(allowedHeaders) ? allowedHeaders.join(', ') : allowedHeaders,
       );
       ctx.res.setHeader('Access-Control-Max-Age', maxAge.toString());
+
+      if (preflightCacheControl) {
+        const cacheControlValue = typeof preflightCacheControl === 'string'
+          ? preflightCacheControl
+          : `public, max-age=${maxAge}`;
+        ctx.res.setHeader('Cache-Control', cacheControlValue);
+      }
 
       if (exposedHeaders.length > 0) {
         ctx.res.setHeader(
@@ -207,3 +274,4 @@ export function rateLimit(options: RateLimitOptions) {
     await next();
   };
 }
+

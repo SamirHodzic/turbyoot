@@ -401,11 +401,13 @@ describe('Security Middleware', () => {
     });
 
     it('should set Access-Control-Allow-Credentials when credentials is true', async () => {
-      const middleware = cors({ credentials: true });
+      const middleware = cors({ origin: 'https://example.com', credentials: true });
       const ctx = createMockContext({
         req: {
           method: 'GET',
-          headers: {}
+          headers: {
+            origin: 'https://example.com'
+          }
         } as any
       });
 
@@ -413,6 +415,7 @@ describe('Security Middleware', () => {
 
       await middleware(ctx, next);
 
+      expect(ctx.res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'https://example.com');
       expect(ctx.res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
       expect(next).toHaveBeenCalled();
     });

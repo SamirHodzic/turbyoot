@@ -143,6 +143,19 @@ export interface SecurityOptions {
   xssFilter?: boolean;
 }
 
+export interface CorsOptions {
+  origin?: string | string[] | RegExp | ((origin: string) => boolean | Promise<boolean>);
+  methods?: string | string[];
+  allowedHeaders?: string | string[];
+  exposedHeaders?: string | string[];
+  credentials?: boolean;
+  maxAge?: number;
+  preflightContinue?: boolean;
+  optionsSuccessStatus?: number;
+  preflightCacheControl?: boolean | string;
+  validateCredentials?: (origin: string) => boolean | Promise<boolean>;
+}
+
 export interface RateLimitOptions {
   windowMs: number;
   max: number;
