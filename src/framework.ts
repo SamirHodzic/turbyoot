@@ -11,6 +11,7 @@ import {
   Plugin,
   ServerOptions,
   BodyOptions,
+  ViewOptions,
 } from './types.js';
 import { createContext } from './context.js';
 import { compilePath } from './utils/path.js';
@@ -23,6 +24,7 @@ import { serveStatic } from './middleware/static.js';
 import { StaticOptions } from './types.js';
 import { RouteTrie } from './utils/route-trie.js';
 import { executeMiddlewareChain } from './utils/middleware-executor.js';
+import { configureViews } from './utils/template.js';
 
 export class Turbyoot {
   private routeTrie: RouteTrie = new RouteTrie();
@@ -35,9 +37,12 @@ export class Turbyoot {
     this.use(errorHandler());
   }
 
-  configure(options: { body?: BodyOptions }): this {
+  configure(options: { body?: BodyOptions; views?: ViewOptions }): this {
     if (options.body?.limit !== undefined) {
       this.bodyLimit = options.body.limit;
+    }
+    if (options.views) {
+      configureViews(options.views);
     }
     return this;
   }
