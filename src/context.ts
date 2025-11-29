@@ -1,5 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Context } from './types.js';
+import { renderTemplate } from './utils/template.js';
 
 export function createContext(
   req: IncomingMessage,
@@ -213,6 +214,30 @@ export function createContext(
 
     get(field: string): string | undefined {
       return this.req.headers[field.toLowerCase()] as string;
+    },
+
+    async render(template: string, data: Record<string, any> = {}): Promise<Context> {
+      if (this.res.headersSent) return this;
+      
+      try {
+        const mergedData = { ...this.state, ...data };
+        const html = await renderTemplate(template, mergedData);
+        
+        this.statusCode = 200;
+        this.res.statusCode = 200;
+        this.res.setHeader('Content-Type', 'text/html');
+        this.res.end(html);
+      } catch (error) {
+        console.error('Template rendering error:', error);
+        this.statusCode = 500;
+        this.res.statusCode = 500;
+        this.json({ 
+          error: error instanceof Error ? error.message : 'Template rendering failed', 
+          status: 500 
+        });
+      }
+      
+      return this;
     },
   };
 

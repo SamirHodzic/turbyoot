@@ -609,7 +609,7 @@ app.get('/profile', (ctx) => {
 
         <h3>Response Methods</h3>
 
-        <h4>ctx.json(data)</h4>
+        <h4 id="ctx-json">ctx.json(data)</h4>
         <p>Sends a JSON response. This method automatically sets the <code>Content-Type</code> header to <code>application/json</code> and converts the data parameter to a JSON string. The response is sent immediately and cannot be modified after calling this method.</p>
         <p><strong>Parameters:</strong></p>
         <ul>
@@ -621,61 +621,108 @@ app.get('/profile', (ctx) => {
 ctx.json([1, 2, 3]);
 ctx.json('string');</code></pre>
 
-        <h4>ctx.send(data)</h4>
+        <h4 id="ctx-send">ctx.send(data)</h4>
         <p>Sends the HTTP response. The body parameter can be a String, Buffer, or an Object.</p>
         <pre><code class="language-javascript">ctx.send('Hello World');
 ctx.send(Buffer.from('Hello'));
 ctx.send({ message: 'Hello' });</code></pre>
 
-        <h4>ctx.status(code)</h4>
+        <h4 id="ctx-render">ctx.render(template, data)</h4>
+        <p>Renders a template file using the configured template engine. This method automatically sets the <code>Content-Type</code> header to <code>text/html</code> and sends the rendered HTML as the response.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>template</code> - The name of the template file (without extension if default engine is set, or with extension)</li>
+          <li><code>data</code> - (Optional) An object containing data to pass to the template. This data is merged with <code>ctx.state</code></li>
+        </ul>
+        <p><strong>Returns:</strong> A Promise that resolves to the context object for method chaining</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">// Configure template engine (e.g., EJS)
+import ejs from 'ejs';
+
+app.configure({
+  views: {
+    views: './views',
+    engine: 'ejs',
+    engines: {
+      ejs: ejs.renderFile,
+    },
+  },
+});
+
+// Render a template
+app.get('/', async (ctx) => {
+  await ctx.render('index', {
+    title: 'Home Page',
+    message: 'Hello World',
+  });
+});
+
+// Template file: views/index.ejs
+// &lt;h1&gt;&lt;%= title %&gt;&lt;/h1&gt;
+// &lt;p&gt;&lt;%= message %&gt;&lt;/p&gt;</code></pre>
+        <p><strong>Note:</strong> You need to install and register your template engine. Turbyoot supports any template engine that follows Express.js conventions (exports a <code>__express</code> function) or can be registered manually. Popular engines like EJS, Pug, Handlebars, etc. work out of the box.</p>
+        <p><strong>Template Engine Configuration:</strong></p>
+        <pre><code class="language-javascript">app.configure({
+  views: {
+    views: './views',           // Directory where templates are stored
+    engine: 'ejs',              // Default template engine (optional)
+    engines: {                  // Register template engines
+      ejs: ejs.renderFile,      // EJS engine
+      pug: pug.renderFile,      // Pug engine (if using Pug)
+    },
+    cache: false,               // Enable template caching (default: false)
+  },
+});</code></pre>
+
+        <h4 id="ctx-status">ctx.status(code)</h4>
         <p>Sets the HTTP status for the response.</p>
         <pre><code class="language-javascript">ctx.status(404);</code></pre>
 
-        <h4>ctx.redirect(url, status)</h4>
+        <h4 id="ctx-redirect">ctx.redirect(url, status)</h4>
         <p>Redirects to the URL derived from the specified path, with specified status, a positive integer that corresponds to an HTTP status code.</p>
         <pre><code class="language-javascript">ctx.redirect('/users', 301);</code></pre>
 
-        <h4>ctx.type(contentType)</h4>
+        <h4 id="ctx-type">ctx.type(contentType)</h4>
         <p>Sets the Content-Type HTTP header.</p>
         <pre><code class="language-javascript">ctx.type('application/json');</code></pre>
 
-        <h4>ctx.ok(data)</h4>
+        <h4 id="ctx-ok">ctx.ok(data)</h4>
         <p>Sends a 200 OK response with optional JSON data.</p>
 
-        <h4>ctx.created(data)</h4>
+        <h4 id="ctx-created">ctx.created(data)</h4>
         <p>Sends a 201 Created response with optional JSON data.</p>
 
-        <h4>ctx.noContent()</h4>
+        <h4 id="ctx-nocontent">ctx.noContent()</h4>
         <p>Sends a 204 No Content response.</p>
 
-        <h4>ctx.badRequest(message)</h4>
+        <h4 id="ctx-badrequest">ctx.badRequest(message)</h4>
         <p>Sends a 400 Bad Request response.</p>
 
-        <h4>ctx.unauthorized(message)</h4>
+        <h4 id="ctx-unauthorized">ctx.unauthorized(message)</h4>
         <p>Sends a 401 Unauthorized response.</p>
 
-        <h4>ctx.forbidden(message)</h4>
+        <h4 id="ctx-forbidden">ctx.forbidden(message)</h4>
         <p>Sends a 403 Forbidden response.</p>
 
-        <h4>ctx.notFound(message)</h4>
+        <h4 id="ctx-notfound">ctx.notFound(message)</h4>
         <p>Sends a 404 Not Found response.</p>
 
-        <h4>ctx.conflict(message)</h4>
+        <h4 id="ctx-conflict">ctx.conflict(message)</h4>
         <p>Sends a 409 Conflict response.</p>
 
-        <h4>ctx.unprocessableEntity(message)</h4>
+        <h4 id="ctx-unprocessableentity">ctx.unprocessableEntity(message)</h4>
         <p>Sends a 422 Unprocessable Entity response.</p>
 
-        <h4>ctx.tooManyRequests(message)</h4>
+        <h4 id="ctx-toomanyrequests">ctx.tooManyRequests(message)</h4>
         <p>Sends a 429 Too Many Requests response.</p>
 
-        <h4>ctx.internalError(message)</h4>
+        <h4 id="ctx-internalerror">ctx.internalError(message)</h4>
         <p>Sends a 500 Internal Server Error response.</p>
 
-        <h4>ctx.header(name, value)</h4>
+        <h4 id="ctx-header">ctx.header(name, value)</h4>
         <p>Sets the response HTTP header field to value.</p>
 
-        <h4>ctx.cookie(name, value, options)</h4>
+        <h4 id="ctx-cookie">ctx.cookie(name, value, options)</h4>
         <p>Sets cookie name to value. The value parameter may be a string or object converted to JSON.</p>
         <pre><code class="language-javascript">ctx.cookie('name', 'value', {
   maxAge: 3600000,
@@ -684,16 +731,16 @@ ctx.send({ message: 'Hello' });</code></pre>
   sameSite: 'strict'
 });</code></pre>
 
-        <h4>ctx.clearCookie(name, options)</h4>
+        <h4 id="ctx-clearcookie">ctx.clearCookie(name, options)</h4>
         <p>Clears the cookie specified by name.</p>
 
-        <h4>ctx.is(mimeType)</h4>
+        <h4 id="ctx-is">ctx.is(mimeType)</h4>
         <p>Returns true if the incoming request's "Content-Type" HTTP header field matches the MIME type specified by the type parameter.</p>
 
-        <h4>ctx.accepts(types)</h4>
+        <h4 id="ctx-accepts">ctx.accepts(types)</h4>
         <p>Checks if the specified content types are acceptable, based on the request's Accept HTTP header field.</p>
 
-        <h4>ctx.get(field)</h4>
+        <h4 id="ctx-get">ctx.get(field)</h4>
         <p>Returns the specified HTTP request header field (case-insensitive match).</p>
       </section>
 
