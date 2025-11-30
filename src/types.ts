@@ -28,6 +28,7 @@ export interface Context {
   unprocessableEntity(message?: string): Context;
   tooManyRequests(message?: string): Context;
   internalError(message?: string): Context;
+  notImplemented(message?: string): Context;
   
   header(name: string, value: string): Context;
   cookie(name: string, value: string, options?: any): Context;

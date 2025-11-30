@@ -170,6 +170,15 @@ export function createContext(
       return this;
     },
 
+    notImplemented(message: string = 'Not Implemented') {
+      this.statusCode = 501;
+      if (!this.res.headersSent) {
+        this.res.statusCode = 501;
+        this.json({ error: message, status: 501 });
+      }
+      return this;
+    },
+
     header(name: string, value: string) {
       if (!this.res.headersSent) {
         this.res.setHeader(name, value);

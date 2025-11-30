@@ -134,6 +134,7 @@ app.del('/users/:id', (ctx) => {
   ctx.unauthorized('Login required');     // 401 Unauthorized
   ctx.notFound('User not found');         // 404 Not Found
   ctx.internalError('Error');             // 500 Internal Server Error
+  ctx.notImplemented('Feature not available'); // 501 Not Implemented
 });</code></pre>
       </section>
 

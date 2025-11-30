@@ -234,7 +234,7 @@ export class FluentRouter implements FluentRoute {
               ctx.noContent();
               break;
             default:
-              ctx.ok({ message: 'Resource handler not implemented' });
+              ctx.notImplemented('Resource handler not implemented');
           }
         });
 

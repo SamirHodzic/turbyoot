@@ -120,6 +120,13 @@ export function createMockContext(overrides: Partial<Context> = {}): Context {
       mockRes.end();
       return mockContext;
     }),
+    notImplemented: jest.fn((message?: string) => {
+      mockContext.statusCode = 501;
+      mockRes.writeHead(501, { 'Content-Type': 'application/json' });
+      mockRes.write(JSON.stringify({ error: message || 'Not Implemented' }));
+      mockRes.end();
+      return mockContext;
+    }),
     
     // Convenience methods
     header: jest.fn((name: string, value: string) => {

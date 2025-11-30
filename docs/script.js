@@ -381,6 +381,7 @@ const searchIndex = [
       { title: 'ctx.unprocessableEntity()', content: 'Send 422 Unprocessable Entity response.', id: 'ctx-unprocessableentity' },
       { title: 'ctx.tooManyRequests()', content: 'Send 429 Too Many Requests response.', id: 'ctx-toomanyrequests' },
       { title: 'ctx.internalError()', content: 'Send 500 Internal Server Error response.', id: 'ctx-internalerror' },
+      { title: 'ctx.notImplemented()', content: 'Send 501 Not Implemented response.', id: 'ctx-notimplemented' },
       { title: 'ctx.header()', content: 'Sets the response HTTP header field to value.', id: 'ctx-header' },
       { title: 'ctx.cookie()', content: 'Sets cookie name to value. The value parameter may be a string or object converted to JSON.', id: 'ctx-cookie' },
       { title: 'ctx.clearCookie()', content: 'Clears the cookie specified by name.', id: 'ctx-clearcookie' },
