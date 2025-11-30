@@ -36,6 +36,7 @@ export interface Context {
   is(mimeType: string): boolean;
   accepts(types: string[]): string | false;
   get(field: string): string | undefined;
+  render(template: string, data?: Record<string, any>): Promise<Context>;
 }
 
 export type Next = () => Promise<void>;
@@ -327,4 +328,15 @@ export interface ServerOptions {
   backlog?: number;
   exclusive?: boolean;
   ipv6Only?: boolean;
+}
+
+export type TemplateEngine = 
+  | ((filePath: string, options: Record<string, any>, callback: (err: Error | null, html?: string) => void) => void)
+  | ((template: string, data: Record<string, any>, options?: any) => Promise<string> | string);
+
+export interface ViewOptions {
+  views?: string;
+  engine?: string;
+  engines?: Record<string, TemplateEngine>;
+  cache?: boolean;
 }

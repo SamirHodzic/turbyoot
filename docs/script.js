@@ -359,18 +359,34 @@ const searchIndex = [
         id: 'app-resource',
       },
       { title: 'app.plugin()', content: 'Register and install plugins to extend functionality.', id: 'app-plugin' },
+      { title: 'app.configure()', content: 'Configure application settings including body parsing limits and template engine views directory, engine, and caching options.', id: 'app-configure' },
       {
         title: 'Context',
         content: 'Request context object with properties and helper methods for handling HTTP requests and responses.',
       },
-      { title: 'ctx.json()', content: 'Send JSON response with automatic content-type header.' },
-      { title: 'ctx.status()', content: 'Set HTTP status code for the response.' },
-      { title: 'ctx.ok()', content: 'Send 200 OK response with JSON data.' },
-      { title: 'ctx.created()', content: 'Send 201 Created response.' },
-      { title: 'ctx.badRequest()', content: 'Send 400 Bad Request response.' },
-      { title: 'ctx.unauthorized()', content: 'Send 401 Unauthorized response.' },
-      { title: 'ctx.notFound()', content: 'Send 404 Not Found response.' },
-      { title: 'ctx.internalError()', content: 'Send 500 Internal Server Error response.' },
+      { title: 'ctx.json()', content: 'Send JSON response with automatic content-type header.', id: 'ctx-json' },
+      { title: 'ctx.render()', content: 'render template file using configured template engine supports EJS Pug Handlebars Express-compatible engines render HTML templates with data configure views directory register engines automatic engine resolution auto-detect renderFile render manual registration', id: 'ctx-render' },
+      { title: 'ctx.send()', content: 'Sends the HTTP response. The body parameter can be a String, Buffer, or an Object.', id: 'ctx-send' },
+      { title: 'ctx.status()', content: 'Set HTTP status code for the response.', id: 'ctx-status' },
+      { title: 'ctx.redirect()', content: 'Redirects to the URL derived from the specified path, with specified status.', id: 'ctx-redirect' },
+      { title: 'ctx.type()', content: 'Sets the Content-Type HTTP header.', id: 'ctx-type' },
+      { title: 'ctx.ok()', content: 'Send 200 OK response with JSON data.', id: 'ctx-ok' },
+      { title: 'ctx.created()', content: 'Send 201 Created response.', id: 'ctx-created' },
+      { title: 'ctx.noContent()', content: 'Send 204 No Content response.', id: 'ctx-nocontent' },
+      { title: 'ctx.badRequest()', content: 'Send 400 Bad Request response.', id: 'ctx-badrequest' },
+      { title: 'ctx.unauthorized()', content: 'Send 401 Unauthorized response.', id: 'ctx-unauthorized' },
+      { title: 'ctx.forbidden()', content: 'Send 403 Forbidden response.', id: 'ctx-forbidden' },
+      { title: 'ctx.notFound()', content: 'Send 404 Not Found response.', id: 'ctx-notfound' },
+      { title: 'ctx.conflict()', content: 'Send 409 Conflict response.', id: 'ctx-conflict' },
+      { title: 'ctx.unprocessableEntity()', content: 'Send 422 Unprocessable Entity response.', id: 'ctx-unprocessableentity' },
+      { title: 'ctx.tooManyRequests()', content: 'Send 429 Too Many Requests response.', id: 'ctx-toomanyrequests' },
+      { title: 'ctx.internalError()', content: 'Send 500 Internal Server Error response.', id: 'ctx-internalerror' },
+      { title: 'ctx.header()', content: 'Sets the response HTTP header field to value.', id: 'ctx-header' },
+      { title: 'ctx.cookie()', content: 'Sets cookie name to value. The value parameter may be a string or object converted to JSON.', id: 'ctx-cookie' },
+      { title: 'ctx.clearCookie()', content: 'Clears the cookie specified by name.', id: 'ctx-clearcookie' },
+      { title: 'ctx.is()', content: 'Returns true if the incoming requests Content-Type HTTP header field matches the MIME type specified by the type parameter.', id: 'ctx-is' },
+      { title: 'ctx.accepts()', content: 'Checks if the specified content types are acceptable, based on the requests Accept HTTP header field.', id: 'ctx-accepts' },
+      { title: 'ctx.get()', content: 'Returns the specified HTTP request header field case-insensitive match.', id: 'ctx-get' },
       {
         title: 'Middleware',
         content: 'Built-in middleware functions for security, validation, compression, caching, and more.',
@@ -382,6 +398,11 @@ const searchIndex = [
       { title: 'compression()', content: 'Response compression middleware using gzip or deflate.' },
       { title: 'cache()', content: 'HTTP caching middleware with ETag and Last-Modified support.' },
       { title: 'auth()', content: 'Authentication middleware for user authentication and authorization.' },
+      {
+        title: 'Template Engine',
+        content: 'template engine render HTML templates using template engines EJS Pug Handlebars configure views directory register engines use ctx.render render templates with data template rendering view engine EJS Pug Handlebars support automatic detection auto-load renderFile render manual registration engines config',
+        id: 'ctx-render',
+      },
     ],
   },
 ];
@@ -425,10 +446,19 @@ function initSearch() {
     const results = [];
     const searchTerms = query.split(/\s+/).filter((term) => term.length > 0);
 
+    if (!searchIndex || searchIndex.length === 0) {
+      console.error('Search index is empty or not loaded');
+      return;
+    }
+
     searchIndex.forEach((pageData) => {
+      if (!pageData || !pageData.sections) return;
       pageData.sections.forEach((section) => {
-        const titleMatch = searchTerms.every((term) => section.title.toLowerCase().includes(term));
-        const contentMatch = searchTerms.every((term) => section.content.toLowerCase().includes(term));
+        if (!section || !section.title || !section.content) return;
+        const titleLower = section.title.toLowerCase();
+        const contentLower = section.content.toLowerCase();
+        const titleMatch = searchTerms.every((term) => titleLower.includes(term));
+        const contentMatch = searchTerms.every((term) => contentLower.includes(term));
 
         if (titleMatch || contentMatch) {
           const relevance = titleMatch ? 2 : 1;
