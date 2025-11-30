@@ -1,21 +1,15 @@
 import { Turbyoot } from 'turbyoot';
-import ejs from 'ejs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// import ejs from 'ejs';
 
 const app = new Turbyoot();
 
 app.configure({
   views: {
-    views: join(__dirname, 'views'),
+    views: './views',
     engine: 'ejs',
-    engines: {
-      ejs: ejs.renderFile,
-    },
+    // engines: {
+    //   ejs: ejs.renderFile,
+    // },
     cache: false,
   },
 });

@@ -636,16 +636,14 @@ ctx.send({ message: 'Hello' });</code></pre>
         </ul>
         <p><strong>Returns:</strong> A Promise that resolves to the context object for method chaining</p>
         <p><strong>Example:</strong></p>
-        <pre><code class="language-javascript">// Configure template engine (e.g., EJS)
-import ejs from 'ejs';
+        <p><strong>Automatic Engine Resolution:</strong></p>
+        <p>Turbyoot automatically detects and loads template engines that export <code>renderFile</code> or <code>render</code> functions. Simply install the engine package and configure it:</p>
+        <pre><code class="language-javascript">// Install: npm install ejs
 
 app.configure({
   views: {
     views: './views',
-    engine: 'ejs',
-    engines: {
-      ejs: ejs.renderFile,
-    },
+    engine: 'ejs',  // Turbyoot will automatically detect ejs.renderFile
   },
 });
 
@@ -660,19 +658,45 @@ app.get('/', async (ctx) => {
 // Template file: views/index.ejs
 // &lt;h1&gt;&lt;%= title %&gt;&lt;/h1&gt;
 // &lt;p&gt;&lt;%= message %&gt;&lt;/p&gt;</code></pre>
-        <p><strong>Note:</strong> You need to install and register your template engine. Turbyoot supports any template engine that follows Express.js conventions (exports a <code>__express</code> function) or can be registered manually. Popular engines like EJS, Pug, Handlebars, etc. work out of the box.</p>
-        <p><strong>Template Engine Configuration:</strong></p>
+        <p><strong>Manual Engine Registration:</strong></p>
+        <p>For engines that don't export <code>renderFile</code> or <code>render</code>, or if you want explicit control, manually register the engine function:</p>
+        <pre><code class="language-javascript">import ejs from 'ejs';
+// or: import pug from 'pug';
+
+app.configure({
+  views: {
+    views: './views',
+    engine: 'ejs',
+    engines: {
+      ejs: ejs.renderFile,  // Explicitly register the render function
+      // pug: pug.renderFile,  // Register multiple engines
+    },
+  },
+});
+
+app.get('/', async (ctx) => {
+  await ctx.render('index', { title: 'Home' });
+});</code></pre>
+        <p><strong>Template Engine Configuration Options:</strong></p>
         <pre><code class="language-javascript">app.configure({
   views: {
     views: './views',           // Directory where templates are stored
-    engine: 'ejs',              // Default template engine (optional)
-    engines: {                  // Register template engines
-      ejs: ejs.renderFile,      // EJS engine
-      pug: pug.renderFile,      // Pug engine (if using Pug)
+    engine: 'ejs',              // Default template engine name
+    engines: {                  // Optional: manually register engine functions
+      ejs: ejs.renderFile,      // For explicit registration or custom engines
+      pug: pug.renderFile,
     },
     cache: false,               // Enable template caching (default: false)
   },
 });</code></pre>
+        <p><strong>How Auto-Detection Works:</strong></p>
+        <ul>
+          <li>Turbyoot first checks if the engine is manually registered in <code>engines</code></li>
+          <li>If not found, it attempts to automatically load the engine from <code>node_modules</code></li>
+          <li>It looks for: a direct function export, <code>renderFile</code> function, or <code>render</code> function</li>
+          <li>If none are found, you'll need to manually register it via <code>engines</code></li>
+        </ul>
+        <p><strong>Supported Engines:</strong> Any engine that exports <code>renderFile</code> (like EJS, Pug) or <code>render</code> can be auto-detected. Examples: <code>ejs</code>, <code>pug</code>, <code>handlebars</code>, <code>mustache</code>, etc.</p>
 
         <h4 id="ctx-status">ctx.status(code)</h4>
         <p>Sets the HTTP status for the response.</p>

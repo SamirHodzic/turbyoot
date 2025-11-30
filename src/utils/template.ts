@@ -1,5 +1,6 @@
 import { readFile } from 'fs/promises';
 import { join, resolve, extname } from 'path';
+import { createRequire } from 'module';
 import { ViewOptions } from '../types.js';
 
 let viewConfig: ViewOptions = {
@@ -19,15 +20,31 @@ export function getViewConfig(): ViewOptions {
 
 async function loadEngine(engineName: string): Promise<any> {
   try {
-    const engineModule = await import(engineName);
-    const engine = engineModule.default || engineModule;
+    let engineModule: any;
     
-    if (engine.__express && typeof engine.__express === 'function') {
-      return engine.__express;
+    try {
+      engineModule = await import(engineName);
+    } catch (importErr: any) {
+      if (importErr.code === 'ERR_MODULE_NOT_FOUND' || importErr.code === 'MODULE_NOT_FOUND') {
+        try {
+          const require = createRequire(process.cwd() + '/package.json');
+          engineModule = require(engineName);
+        } catch {
+          throw new Error(`Template engine "${engineName}" is not installed. Please install it with: npm install ${engineName}`);
+        }
+      } else {
+        throw importErr;
+      }
     }
+    
+    const engine = engineModule.default || engineModule;
     
     if (typeof engine === 'function') {
       return engine;
+    }
+    
+    if (engine.renderFile && typeof engine.renderFile === 'function') {
+      return engine.renderFile;
     }
     
     if (engine.render && typeof engine.render === 'function') {
@@ -45,12 +62,12 @@ async function loadEngine(engineName: string): Promise<any> {
       };
     }
     
-    throw new Error(`Template engine "${engineName}" does not export a compatible render function. It should export a __express function or a render function.`);
+    throw new Error(`Template engine "${engineName}" does not export a compatible render function. It should export a function, renderFile, or render. You can also register it manually via engines config.`);
   } catch (err: any) {
-    if (err.code === 'ERR_MODULE_NOT_FOUND' || err.code === 'MODULE_NOT_FOUND') {
-      throw new Error(`Template engine "${engineName}" is not installed. Please install it with: npm install ${engineName}`);
+    if (err.message && err.message.includes('not installed')) {
+      throw err;
     }
-    throw err;
+    throw new Error(`Template engine "${engineName}" could not be loaded: ${err.message || String(err)}`);
   }
 }
 
@@ -97,8 +114,12 @@ async function renderTemplate(template: string, data: Record<string, any> = {}):
   } else {
     try {
       engine = await loadEngine(engineName);
-    } catch {
-      throw new Error(`Template engine "${engineName}" is not registered. Register it using app.configure({ views: { engines: { "${engineName}": engine } } }) or install the package: npm install ${engineName}`);
+    } catch (err: any) {
+      const errorMessage = err?.message || String(err);
+      if (errorMessage.includes('not installed') || errorMessage.includes('MODULE_NOT_FOUND') || errorMessage.includes('ERR_MODULE_NOT_FOUND')) {
+        throw new Error(`Template engine "${engineName}" is not installed. Please install it with: npm install ${engineName}`);
+      }
+      throw new Error(`Template engine "${engineName}" could not be loaded: ${errorMessage}. Register it manually using app.configure({ views: { engines: { "${engineName}": engineFunction } } })`);
     }
   }
 
