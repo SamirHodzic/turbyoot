@@ -1,6 +1,6 @@
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { createServer as createHttpsServer, ServerOptions as HttpsServerOptions } from 'https';
-import { createServer as createHttp2Server, createSecureServer, Http2ServerRequest, Http2ServerResponse } from 'http2';
+import { createServer, IncomingMessage, ServerResponse, Server as HttpServer } from 'http';
+import { createServer as createHttpsServer, ServerOptions as HttpsServerOptions, Server as HttpsServer } from 'https';
+import { createServer as createHttp2Server, createSecureServer, Http2ServerRequest, Http2ServerResponse, Http2Server, Http2SecureServer } from 'http2';
 import {
   Context,
   Middleware,
@@ -26,10 +26,12 @@ import { RouteTrie } from './utils/route-trie.js';
 import { executeMiddlewareChain } from './utils/middleware-executor.js';
 import { configureViews } from './utils/template.js';
 
+export type ServerInstance = HttpServer | HttpsServer | Http2Server | Http2SecureServer;
+
 export class Turbyoot {
   private routeTrie: RouteTrie = new RouteTrie();
   private middleware: Middleware[] = [];
-  private server: any = null;
+  private server: ServerInstance | null = null;
   private pluginManager: PluginManager = new PluginManager();
   private bodyLimit: number = 1024 * 1024;
 
@@ -238,9 +240,9 @@ export class Turbyoot {
     }
   }
 
-  listen(port: number, callback?: () => void): void;
-  listen(port: number, options?: ServerOptions, callback?: () => void): void;
-  listen(port: number, optionsOrCallback?: ServerOptions | (() => void), callback?: () => void): void {
+  listen(port: number, callback?: () => void): ServerInstance;
+  listen(port: number, options?: ServerOptions, callback?: () => void): ServerInstance;
+  listen(port: number, optionsOrCallback?: ServerOptions | (() => void), callback?: () => void): ServerInstance {
     let options: ServerOptions | undefined;
     let cb: (() => void) | undefined;
 
@@ -292,6 +294,11 @@ export class Turbyoot {
     }
 
     this.server.listen(listenOptions, cb);
+    return this.server;
+  }
+
+  getServer(): ServerInstance | null {
+    return this.server;
   }
 
   close(): void {

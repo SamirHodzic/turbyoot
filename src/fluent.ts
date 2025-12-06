@@ -1,4 +1,5 @@
 import { Context, Middleware, RouteHandler, FluentRoute, ResourceOptions } from './types.js';
+import type { ServerInstance } from './framework.js';
 
 export class FluentRouter implements FluentRoute {
   private app: any;
@@ -412,15 +413,19 @@ export class EnhancedTurbyoot {
     return this.app.healthCheck(checks);
   }
 
-  listen(port: number, callback?: () => void): void;
-  listen(port: number, options?: any, callback?: () => void): void;
-  listen(port: number, optionsOrCallback?: any, callback?: () => void): void {
+  listen(port: number, callback?: () => void): ServerInstance;
+  listen(port: number, options?: any, callback?: () => void): ServerInstance;
+  listen(port: number, optionsOrCallback?: any, callback?: () => void): ServerInstance {
     this.pluginManager.install(this);
     if (typeof optionsOrCallback === 'function') {
-      this.app.listen(port, optionsOrCallback);
+      return this.app.listen(port, optionsOrCallback);
     } else {
-      this.app.listen(port, optionsOrCallback, callback);
+      return this.app.listen(port, optionsOrCallback, callback);
     }
+  }
+
+  getServer(): ServerInstance | null {
+    return this.app.getServer();
   }
 
   close(): void {

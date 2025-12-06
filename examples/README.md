@@ -18,4 +18,5 @@ This page contains a list of examples using Turbyoot.
 - [resource-routing](./resource-routing) - Multiple HTTP operations on the same resource
 - [plugins](./plugins) - Working with plugins
 - [template-engine](./template-engine) - Using template engines (EJS) to render HTML views
+- [websocket](./websocket) - WebSocket support with socket.io
 
