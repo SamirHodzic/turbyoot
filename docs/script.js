@@ -360,6 +360,8 @@ const searchIndex = [
       },
       { title: 'app.plugin()', content: 'Register and install plugins to extend functionality.', id: 'app-plugin' },
       { title: 'app.configure()', content: 'Configure application settings including body parsing limits and template engine views directory, engine, and caching options.', id: 'app-configure' },
+      { title: 'app.listen()', content: 'Start the server and listen on a port. Returns the server instance further integrations with other libraries.', id: 'app-listen' },
+      { title: 'app.getServer()', content: 'Get the underlying Node.js server instance after listen has been called.', id: 'app-getserver' },
       {
         title: 'Context',
         content: 'Request context object with properties and helper methods for handling HTTP requests and responses.',
@@ -381,6 +383,7 @@ const searchIndex = [
       { title: 'ctx.unprocessableEntity()', content: 'Send 422 Unprocessable Entity response.', id: 'ctx-unprocessableentity' },
       { title: 'ctx.tooManyRequests()', content: 'Send 429 Too Many Requests response.', id: 'ctx-toomanyrequests' },
       { title: 'ctx.internalError()', content: 'Send 500 Internal Server Error response.', id: 'ctx-internalerror' },
+      { title: 'ctx.notImplemented()', content: 'Send 501 Not Implemented response.', id: 'ctx-notimplemented' },
       { title: 'ctx.header()', content: 'Sets the response HTTP header field to value.', id: 'ctx-header' },
       { title: 'ctx.cookie()', content: 'Sets cookie name to value. The value parameter may be a string or object converted to JSON.', id: 'ctx-cookie' },
       { title: 'ctx.clearCookie()', content: 'Clears the cookie specified by name.', id: 'ctx-clearcookie' },

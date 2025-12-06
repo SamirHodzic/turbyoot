@@ -328,6 +328,7 @@ const app = new Turbyoot();</code></pre>
           <li><code>options</code> - Optional server configuration object (see below)</li>
           <li><code>callback</code> - Optional callback function called when the server starts listening</li>
         </ul>
+        <p><strong>Returns:</strong> The underlying Node.js server instance (<code>http.Server</code>, <code>https.Server</code>, <code>Http2Server</code>, or <code>Http2SecureServer</code> depending on the protocol). This is useful for integrating with other libraries who requires the server instance to attach their handlers.</p>
         <p><strong>Server Options:</strong></p>
         <table>
           <thead>
@@ -472,6 +473,15 @@ app.configure({
 
         <h3 id="app-close">app.close()</h3>
         <p>Closes the server, stopping it from accepting new connections.</p>
+
+        <h3 id="app-getserver">app.getServer()</h3>
+        <p>Returns the underlying Node.js server instance after <code>listen()</code> has been called. This is useful when you need to access the server instance after it has been created, for example to attach WebSocket handlers.</p>
+        <p><strong>Returns:</strong> The server instance (<code>http.Server</code>, <code>https.Server</code>, <code>Http2Server</code>, or <code>Http2SecureServer</code>), or <code>null</code> if <code>listen()</code> has not been called yet.</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.listen(3000);
+
+const server = app.getServer();
+const io = new Server(server);</code></pre>
 
         <h3 id="app-plugin">app.plugin(plugin)</h3>
         <p>Registers and installs a plugin. Plugins allow you to extend Turbyoot's functionality by adding custom middleware, routes, or modifying the application instance. Plugins are installed immediately when registered, making them perfect for modularizing your application or creating reusable functionality.</p>
@@ -742,6 +752,9 @@ app.get('/', async (ctx) => {
 
         <h4 id="ctx-internalerror">ctx.internalError(message)</h4>
         <p>Sends a 500 Internal Server Error response.</p>
+
+        <h4 id="ctx-notimplemented">ctx.notImplemented(message)</h4>
+        <p>Sends a 501 Not Implemented response.</p>
 
         <h4 id="ctx-header">ctx.header(name, value)</h4>
         <p>Sets the response HTTP header field to value.</p>
