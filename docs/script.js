@@ -362,6 +362,7 @@ const searchIndex = [
       { title: 'app.configure()', content: 'Configure application settings including body parsing limits, custom body parsers for XML YAML CSV content types, and template engine views directory, engine, and caching options.', id: 'app-configure' },
       { title: 'app.listen()', content: 'Start the server and listen on a port. Returns the server instance further integrations with other libraries.', id: 'app-listen' },
       { title: 'app.getServer()', content: 'Get the underlying Node.js server instance after listen has been called.', id: 'app-getserver' },
+      { title: 'app.enableGracefulShutdown()', content: 'Enable graceful shutdown with signal handling SIGTERM SIGINT for clean server shutdown.', id: 'app-enablegracefulshutdown' },
       {
         title: 'Context',
         content: 'Request context object with properties and helper methods for handling HTTP requests and responses.',

@@ -13,6 +13,7 @@ import {
   BodyOptions,
   ViewOptions,
   BodyParser,
+  GracefulShutdownOptions,
 } from './types.js';
 import { createContext } from './context.js';
 import { compilePath } from './utils/path.js';
@@ -310,6 +311,55 @@ export class Turbyoot {
     if (this.server) {
       this.server.close();
     }
+  }
+
+  enableGracefulShutdown(options: GracefulShutdownOptions = {}): this {
+    const { timeout = 30000, signals = ['SIGTERM', 'SIGINT'], onShutdown } = options;
+
+    let isShuttingDown = false;
+
+    const shutdown = async (signal: string) => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+
+      console.log(`\nReceived ${signal}, starting graceful shutdown...`);
+
+      const forceExitTimeout = setTimeout(() => {
+        console.error('Graceful shutdown timed out, forcing exit');
+        process.exit(1);
+      }, timeout);
+
+      try {
+        if (this.server) {
+          await new Promise<void>((resolve, reject) => {
+            this.server!.close((err) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+          console.log('Server closed, no longer accepting connections');
+        }
+
+        if (onShutdown) {
+          await onShutdown();
+          console.log('Cleanup completed');
+        }
+
+        clearTimeout(forceExitTimeout);
+        console.log('Graceful shutdown completed');
+        process.exit(0);
+      } catch (error) {
+        console.error('Error during shutdown:', error);
+        clearTimeout(forceExitTimeout);
+        process.exit(1);
+      }
+    };
+
+    for (const signal of signals) {
+      process.on(signal, () => shutdown(signal));
+    }
+
+    return this;
   }
 
   route(): FluentRoute {

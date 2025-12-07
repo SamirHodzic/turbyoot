@@ -116,4 +116,33 @@ describe('Turbyoot Core', () => {
       expect(typeof app.plugin).toBe('function');
     });
   });
+
+  describe('Graceful Shutdown', () => {
+    it('should have enableGracefulShutdown method', () => {
+      expect(typeof app.enableGracefulShutdown).toBe('function');
+    });
+
+    it('should return the app instance for chaining', () => {
+      const result = app.enableGracefulShutdown();
+      expect(result).toBe(app);
+    });
+
+    it('should accept custom options', () => {
+      const onShutdown = jest.fn();
+      const result = app.enableGracefulShutdown({
+        timeout: 5000,
+        signals: ['SIGTERM'],
+        onShutdown,
+      });
+      expect(result).toBe(app);
+    });
+
+    it('should have getServer method', () => {
+      expect(typeof app.getServer).toBe('function');
+    });
+
+    it('should return null before listen is called', () => {
+      expect(app.getServer()).toBeNull();
+    });
+  });
 });

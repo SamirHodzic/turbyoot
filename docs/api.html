@@ -499,6 +499,32 @@ app.configure({
 const server = app.getServer();
 const io = new Server(server);</code></pre>
 
+        <h3 id="app-enablegracefulshutdown">app.enableGracefulShutdown(options)</h3>
+        <p>Enables graceful shutdown handling for the server. When enabled, the server will listen for termination signals (SIGTERM, SIGINT) and perform a clean shutdown: stop accepting new connections, wait for existing requests to complete, run cleanup callbacks, and exit.</p>
+        <p><strong>Parameters:</strong></p>
+        <ul>
+          <li><code>options</code> - Optional configuration object
+            <ul>
+              <li><code>timeout</code> - Maximum time in milliseconds to wait for graceful shutdown (default: 30000)</li>
+              <li><code>signals</code> - Array of signals to listen for (default: ['SIGTERM', 'SIGINT'])</li>
+              <li><code>onShutdown</code> - Async callback function for cleanup (e.g., closing database connections)</li>
+            </ul>
+          </li>
+        </ul>
+        <p><strong>Returns:</strong> The Turbyoot instance for method chaining</p>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-javascript">app.listen(3000);
+
+app.enableGracefulShutdown({
+  timeout: 30000,
+  signals: ['SIGTERM', 'SIGINT'],
+  onShutdown: async () => {
+    await db.close();
+    console.log('Database connection closed');
+  }
+});</code></pre>
+        <p><strong>Note:</strong> This method should be called after <code>listen()</code>. During shutdown, the server will log progress messages and force exit if the timeout is exceeded.</p>
+
         <h3 id="app-plugin">app.plugin(plugin)</h3>
         <p>Registers and installs a plugin. Plugins allow you to extend Turbyoot's functionality by adding custom middleware, routes, or modifying the application instance. Plugins are installed immediately when registered, making them perfect for modularizing your application or creating reusable functionality.</p>
         <p><strong>Parameters:</strong></p>
