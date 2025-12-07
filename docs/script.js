@@ -359,7 +359,7 @@ const searchIndex = [
         id: 'app-resource',
       },
       { title: 'app.plugin()', content: 'Register and install plugins to extend functionality.', id: 'app-plugin' },
-      { title: 'app.configure()', content: 'Configure application settings including body parsing limits and template engine views directory, engine, and caching options.', id: 'app-configure' },
+      { title: 'app.configure()', content: 'Configure application settings including body parsing limits, custom body parsers for XML YAML CSV content types, and template engine views directory, engine, and caching options.', id: 'app-configure' },
       { title: 'app.listen()', content: 'Start the server and listen on a port. Returns the server instance further integrations with other libraries.', id: 'app-listen' },
       { title: 'app.getServer()', content: 'Get the underlying Node.js server instance after listen has been called.', id: 'app-getserver' },
       {

@@ -391,5 +391,178 @@ describe('Body Parser', () => {
       expect(result).toBe(body);
     });
   });
+
+  describe('Custom Body Parsers', () => {
+    it('should use custom parser for exact content type match', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/xml'
+      });
+
+      const customXmlParser = (body: string) => ({ parsed: true, data: body });
+
+      const promise = parseBody(req, {
+        parsers: {
+          'application/xml': customXmlParser
+        }
+      });
+      req.emitData(Buffer.from('<root><item>test</item></root>'));
+      req.emitEnd();
+
+      const result = await promise;
+      expect(result).toEqual({ parsed: true, data: '<root><item>test</item></root>' });
+    });
+
+    it('should use custom parser with wildcard pattern', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/vnd.api+json'
+      });
+
+      const customParser = (body: string) => ({ custom: true, body: JSON.parse(body) });
+
+      const promise = parseBody(req, {
+        parsers: {
+          'application/vnd.*': customParser
+        }
+      });
+      req.emitData(Buffer.from('{"name":"John"}'));
+      req.emitEnd();
+
+      const result = await promise;
+      expect(result).toEqual({ custom: true, body: { name: 'John' } });
+    });
+
+    it('should support async custom parsers', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/yaml'
+      });
+
+      const asyncParser = async (body: string) => {
+        await new Promise(resolve => setTimeout(resolve, 10));
+        return { yaml: body.split('\n').map(line => line.trim()) };
+      };
+
+      const promise = parseBody(req, {
+        parsers: {
+          'application/yaml': asyncParser
+        }
+      });
+      req.emitData(Buffer.from('key: value\nother: data'));
+      req.emitEnd();
+
+      const result = await promise;
+      expect(result).toEqual({ yaml: ['key: value', 'other: data'] });
+    });
+
+    it('should pass content type to custom parser', async () => {
+      const req = createMockRequest({
+        'content-type': 'text/csv; charset=utf-8'
+      });
+
+      let receivedContentType = '';
+      const csvParser = (body: string, contentType: string) => {
+        receivedContentType = contentType;
+        return body.split(',');
+      };
+
+      const promise = parseBody(req, {
+        parsers: {
+          'text/csv': csvParser
+        }
+      });
+      req.emitData(Buffer.from('a,b,c'));
+      req.emitEnd();
+
+      await promise;
+      expect(receivedContentType).toBe('text/csv; charset=utf-8');
+    });
+
+    it('should prefer exact match over wildcard', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/json'
+      });
+
+      const exactParser = () => ({ type: 'exact' });
+      const wildcardParser = () => ({ type: 'wildcard' });
+
+      const promise = parseBody(req, {
+        parsers: {
+          'application/json': exactParser,
+          'application/*': wildcardParser
+        }
+      });
+      req.emitData(Buffer.from('{}'));
+      req.emitEnd();
+
+      const result = await promise;
+      expect(result).toEqual({ type: 'exact' });
+    });
+
+    it('should fall back to default parser when no custom parser matches', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/json'
+      });
+
+      const promise = parseBody(req, {
+        parsers: {
+          'application/xml': () => ({ xml: true })
+        }
+      });
+      req.emitData(Buffer.from('{"name":"John"}'));
+      req.emitEnd();
+
+      const result = await promise;
+      expect(result).toEqual({ name: 'John' });
+    });
+
+    it('should handle custom parser errors', async () => {
+      const req = createMockRequest({
+        'content-type': 'application/custom'
+      });
+
+      const errorParser = () => {
+        throw new Error('Custom parser error');
+      };
+
+      const promise = parseBody(req, {
+        parsers: {
+          'application/custom': errorParser
+        }
+      });
+      req.emitData(Buffer.from('data'));
+      req.emitEnd();
+
+      await expect(promise).rejects.toThrow('Custom parser error');
+    });
+
+    it('should handle multiple custom parsers', async () => {
+      const xmlParser = (body: string) => ({ format: 'xml', content: body });
+      const yamlParser = (body: string) => ({ format: 'yaml', content: body });
+      const csvParser = (body: string) => ({ format: 'csv', content: body.split(',') });
+
+      const parsers = {
+        'application/xml': xmlParser,
+        'application/yaml': yamlParser,
+        'text/csv': csvParser
+      };
+
+      const reqXml = createMockRequest({ 'content-type': 'application/xml' });
+      const promiseXml = parseBody(reqXml, { parsers });
+      reqXml.emitData(Buffer.from('<data/>'));
+      reqXml.emitEnd();
+      expect(await promiseXml).toEqual({ format: 'xml', content: '<data/>' });
+
+      const reqYaml = createMockRequest({ 'content-type': 'application/yaml' });
+      const promiseYaml = parseBody(reqYaml, { parsers });
+      reqYaml.emitData(Buffer.from('key: value'));
+      reqYaml.emitEnd();
+      expect(await promiseYaml).toEqual({ format: 'yaml', content: 'key: value' });
+
+      const reqCsv = createMockRequest({ 'content-type': 'text/csv' });
+      const promiseCsv = parseBody(reqCsv, { parsers });
+      reqCsv.emitData(Buffer.from('a,b,c'));
+      reqCsv.emitEnd();
+      expect(await promiseCsv).toEqual({ format: 'csv', content: ['a', 'b', 'c'] });
+    });
+  });
 });
 

@@ -12,6 +12,7 @@ This page contains a list of examples using Turbyoot.
 - [file-upload](./file-upload) - Uploading files with multipart/form-data
 - [error](./error) - Working with error middleware
 - [custom-middleware](./custom-middleware) - Creating and using custom middleware
+- [custom-parsers](./custom-parsers) - Custom body parsers for CSV, NDJSON, etc.
 - [content-validation](./content-validation) - Request body and query validation
 - [fluent-routing](./fluent-routing) - Fluent API for route definitions
 - [group-routing](./group-routing) - Organizing routes in groups
