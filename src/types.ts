@@ -220,8 +220,11 @@ export interface RouterOptions {
   middleware?: Middleware[];
 }
 
+export type BodyParser = (body: string, contentType: string) => any | Promise<any>;
+
 export interface BodyOptions {
   limit?: number;
+  parsers?: Record<string, BodyParser>;
 }
 
 export interface FluentRoute {

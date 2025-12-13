@@ -455,6 +455,7 @@ app.listen(3444, {
               <li><code>body</code> - Body parsing configuration
                 <ul>
                   <li><code>limit</code> - Maximum request body size in bytes (default: 1048576 / 1MB)</li>
+                  <li><code>parsers</code> - Custom body parsers for specific content types (see example below)</li>
                 </ul>
               </li>
             </ul>
@@ -467,6 +468,21 @@ app.listen(3444, {
 app.configure({
   body: {
     limit: 2 * 1024 * 1024 // 2MB
+  }
+});</code></pre>
+        <p><strong>Custom Body Parsers:</strong></p>
+        <p>You can register custom parsers for specific content types. Parsers receive the raw body string and the full content-type header, and can return any parsed value (sync or async).</p>
+        <pre><code class="language-javascript">import { parse as parseYaml } from 'yaml';
+import { parseStringPromise as parseXml } from 'xml2js';
+
+app.configure({
+  body: {
+    parsers: {
+      'application/xml': async (body) => await parseXml(body),
+      'application/yaml': (body) => parseYaml(body),
+      'text/csv': (body) => body.split('\n').map(row => row.split(',')),
+      'application/vnd.*': (body) => JSON.parse(body), // Wildcard pattern
+    }
   }
 });</code></pre>
         <p><strong>Note:</strong> Configuration should be set before starting the server with <code>listen()</code>.</p>

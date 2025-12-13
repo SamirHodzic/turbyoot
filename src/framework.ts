@@ -12,6 +12,7 @@ import {
   ServerOptions,
   BodyOptions,
   ViewOptions,
+  BodyParser,
 } from './types.js';
 import { createContext } from './context.js';
 import { compilePath } from './utils/path.js';
@@ -34,6 +35,7 @@ export class Turbyoot {
   private server: ServerInstance | null = null;
   private pluginManager: PluginManager = new PluginManager();
   private bodyLimit: number = 1024 * 1024;
+  private bodyParsers: Record<string, BodyParser> = {};
 
   constructor() {
     this.use(errorHandler());
@@ -42,6 +44,9 @@ export class Turbyoot {
   configure(options: { body?: BodyOptions; views?: ViewOptions }): this {
     if (options.body?.limit !== undefined) {
       this.bodyLimit = options.body.limit;
+    }
+    if (options.body?.parsers) {
+      this.bodyParsers = { ...this.bodyParsers, ...options.body.parsers };
     }
     if (options.views) {
       configureViews(options.views);
@@ -178,7 +183,7 @@ export class Turbyoot {
         const contentType = req.headers['content-type'] || '';
         if (!contentType.includes('multipart/form-data')) {
           try {
-            const rawBody = await parseBody(req, { limit: this.bodyLimit });
+            const rawBody = await parseBody(req, { limit: this.bodyLimit, parsers: this.bodyParsers });
             body = sanitize(rawBody);
           } catch (error: any) {
             if (error?.message?.includes('exceeds limit')) {
