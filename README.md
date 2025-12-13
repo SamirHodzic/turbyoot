@@ -186,7 +186,7 @@ node examples/hello-world
 Available examples:
 - [hello-world](./examples/hello-world) - Simple request handler
 - [auth-cookies](./examples/auth-cookies) - Authentication with cookie-based sessions
-- [auth-jwt](./examples/auht-jwt) - Authentication with JWT tokens
+- [auth-jwt](./examples/auth-jwt) - Authentication with JWT tokens
 - [static-serving](./examples/static-serving) - Serving static files
 - [file-upload](./examples/file-upload) - Uploading files with multipart/form-data
 - [fluent-routing](./examples/fluent-routing) - Fluent API for route definitions

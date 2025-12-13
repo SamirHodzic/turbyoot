@@ -1,4 +1,4 @@
-import { Context, Middleware, RouteHandler, FluentRoute, ResourceOptions } from './types.js';
+import { Context, Middleware, RouteHandler, FluentRoute, ResourceOptions, GracefulShutdownOptions } from './types.js';
 import type { ServerInstance } from './framework.js';
 
 export class FluentRouter implements FluentRoute {
@@ -430,6 +430,11 @@ export class EnhancedTurbyoot {
 
   close(): void {
     this.app.close();
+  }
+
+  enableGracefulShutdown(options?: GracefulShutdownOptions): this {
+    this.app.enableGracefulShutdown(options);
+    return this;
   }
 
   route(): FluentRoute {

@@ -344,3 +344,9 @@ export interface ViewOptions {
   engines?: Record<string, TemplateEngine>;
   cache?: boolean;
 }
+
+export interface GracefulShutdownOptions {
+  timeout?: number;
+  signals?: NodeJS.Signals[];
+  onShutdown?: () => void | Promise<void>;
+}

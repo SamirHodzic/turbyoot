@@ -4,7 +4,7 @@ This page contains a list of examples using Turbyoot.
 
 - [hello-world](./hello-world) - Simple request handler
 - [auth-cookies](./auth-cookies) - Authentication with cookie-based sessions
-- [auht-jwt](./auht-jwt) - Authentication with JWT tokens
+- [auth-jwt](./auth-jwt) - Authentication with JWT tokens
 - [https-server](./https-server) - Running server with HTTPS
 - [http2-server](./http2-server) - Running server with HTTP/2
 - [static-serving](./static-serving) - Serving static files
