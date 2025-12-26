@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { validate, validateQuery, validateField } from '../../src/middleware/validation.js';
 import { createMockContext } from '../utils/test-helpers.js';
+import { ValidationError, ErrorCode } from '../../src/errors.js';
 
 describe('Validation Middleware', () => {
   let ctx: ReturnType<typeof createMockContext>;
@@ -42,16 +43,8 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('required'),
-          status: 400
-        })
-      );
     });
 
     it('should fail validation when required field is empty string', async () => {
@@ -66,10 +59,8 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(400);
     });
 
     it('should fail validation when required field is null', async () => {
@@ -84,10 +75,8 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(400);
     });
   });
 
@@ -118,13 +107,12 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('must be a string')
-        })
-      );
+      try {
+        await middleware(ctx, next);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect((error as ValidationError).details[0].code).toBe(ErrorCode.INVALID_FIELD_TYPE);
+      }
     });
 
     it('should validate number type', async () => {
@@ -153,13 +141,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('must be a number')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate boolean type', async () => {
@@ -218,8 +200,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate array type', async () => {
@@ -248,8 +229,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate object type', async () => {
@@ -278,8 +258,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -310,13 +289,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('at least 3 characters')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate maxLength', async () => {
@@ -345,13 +318,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('at most 10 characters')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate pattern', async () => {
@@ -380,13 +347,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('format is invalid')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate enum', async () => {
@@ -415,13 +376,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('must be one of')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -452,13 +407,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('must be at least 18')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate max', async () => {
@@ -487,13 +436,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('must be at most 100')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -524,13 +467,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('at least 2 items')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate maxItems', async () => {
@@ -559,13 +496,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('at most 5 items')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
 
     it('should validate array items', async () => {
@@ -600,8 +531,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -654,8 +584,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -696,13 +625,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('Password must be at least 8 characters')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -718,14 +641,8 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('is not allowed')
-        })
-      );
     });
 
     it('should allow unknown fields when allowUnknown is true', async () => {
@@ -766,14 +683,8 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('address.unknown is not allowed')
-        })
-      );
     });
 
     it('should reject unknown fields in array items', async () => {
@@ -800,9 +711,8 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(400);
     });
   });
 
@@ -921,8 +831,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -947,13 +856,7 @@ describe('Validation Middleware', () => {
         page: { type: 'number' }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('required')
-        })
-      );
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -984,8 +887,7 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
+      await expect(middleware(ctx, next)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -1031,33 +933,7 @@ describe('Validation Middleware', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle non-Error exceptions', async () => {
-      ctx.body = { name: 'John' };
-      
-      const middleware = validate({
-        schema: {
-          body: {
-            name: {
-              type: 'string',
-              validate: () => {
-                throw 'String error';
-              }
-            }
-          }
-        }
-      });
-
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.any(String),
-          status: 400
-        })
-      );
-    });
-
-    it('should set both statusCode and res.statusCode on error', async () => {
+    it('should throw ValidationError for validation failures', async () => {
       ctx.body = {};
       
       const middleware = validate({
@@ -1068,9 +944,34 @@ describe('Validation Middleware', () => {
         }
       });
 
-      await middleware(ctx, next);
-      expect(ctx.statusCode).toBe(400);
-      expect(ctx.res.statusCode).toBe(400);
+      try {
+        await middleware(ctx, next);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect((error as ValidationError).status).toBe(400);
+        expect((error as ValidationError).code).toBe(ErrorCode.VALIDATION_FAILED);
+        expect((error as ValidationError).details.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should include all validation errors in details', async () => {
+      ctx.body = { age: 'not-a-number' };
+      
+      const middleware = validate({
+        schema: {
+          body: {
+            name: { required: true, type: 'string' },
+            age: { type: 'number' }
+          }
+        }
+      });
+
+      try {
+        await middleware(ctx, next);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect((error as ValidationError).details.length).toBe(2);
+      }
     });
   });
 

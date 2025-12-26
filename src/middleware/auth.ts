@@ -1,9 +1,9 @@
 import { Context } from '../types.js';
+import { AuthenticationError, AuthorizationError } from '../errors.js';
 
-// Generic user interface
 export interface AuthUser {
   id: string;
-  [key: string]: any; // Allow any additional properties
+  [key: string]: any;
 }
 
 export interface AuthOptions {
@@ -19,13 +19,11 @@ export function auth(options: AuthOptions) {
   const { cookieName = 'auth-token', tokenExtractor, userResolver } = options;
 
   return async (ctx: Context, next: () => Promise<void>) => {
-    // Extract token using custom extractor or default methods
     let token: string | null = null;
 
     if (tokenExtractor) {
       token = tokenExtractor(ctx);
     } else {
-      // Default token extraction from Authorization header or cookie
       token = ctx.req.headers.authorization?.replace('Bearer ', '') || null;
 
       if (!token) {
@@ -60,10 +58,7 @@ export function auth(options: AuthOptions) {
 export function requireAuth() {
   return async (ctx: Context, next: () => Promise<void>) => {
     if (!ctx.state.user) {
-      ctx.statusCode = 401;
-      ctx.res.statusCode = 401;
-      ctx.json({ error: 'Authentication required', status: 401 });
-      return;
+      throw new AuthenticationError('Authentication required');
     }
     await next();
   };
@@ -74,25 +69,16 @@ export function requireRole(roles: string | string[], roleKey: string = 'roles')
 
   return async (ctx: Context, next: () => Promise<void>) => {
     if (!ctx.state.user) {
-      ctx.statusCode = 401;
-      ctx.res.statusCode = 401;
-      ctx.json({ error: 'Authentication required', status: 401 });
-      return;
+      throw new AuthenticationError('Authentication required');
     }
 
     const userRoles = ctx.state.user[roleKey] || [];
     const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
 
     if (!hasRequiredRole) {
-      ctx.statusCode = 403;
-      ctx.res.statusCode = 403;
-      ctx.json({
-        error: 'Insufficient permissions',
-        status: 403,
-        required: requiredRoles,
-        userRoles: userRoles,
-      });
-      return;
+      const error = AuthorizationError.insufficientPermissions(requiredRoles);
+      (error.meta as Record<string, unknown>).userRoles = userRoles;
+      throw error;
     }
 
     await next();
@@ -104,10 +90,7 @@ export function requirePermission(permissions: string | string[], permissionKey:
 
   return async (ctx: Context, next: () => Promise<void>) => {
     if (!ctx.state.user) {
-      ctx.statusCode = 401;
-      ctx.res.statusCode = 401;
-      ctx.json({ error: 'Authentication required', status: 401 });
-      return;
+      throw new AuthenticationError('Authentication required');
     }
 
     const userPermissions = ctx.state.user[permissionKey] || [];
@@ -116,14 +99,7 @@ export function requirePermission(permissions: string | string[], permissionKey:
     );
 
     if (!hasPermission) {
-      ctx.statusCode = 403;
-      ctx.res.statusCode = 403;
-      ctx.json({
-        error: 'Insufficient permissions',
-        status: 403,
-        required: requiredPermissions,
-      });
-      return;
+      throw AuthorizationError.insufficientPermissions(requiredPermissions);
     }
 
     await next();

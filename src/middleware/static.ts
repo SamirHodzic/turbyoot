@@ -3,6 +3,7 @@ import { readFile, stat } from 'fs/promises';
 import { Stats } from 'fs';
 import { join, resolve, normalize, extname } from 'path';
 import { createHash } from 'crypto';
+import { AuthorizationError, InternalError } from '../errors.js';
 
 export function serveStatic(
   directory: string,
@@ -37,10 +38,7 @@ export function serveStatic(
     }
 
     if (filePath.includes('..') || filePath.includes('~')) {
-      ctx.statusCode = 403;
-      ctx.res.statusCode = 403;
-      ctx.json({ error: 'Forbidden', status: 403 });
-      return;
+      throw new AuthorizationError('Forbidden');
     }
 
     const isDotfile = filePath.split(/[/\\]/).some((part) => part.startsWith('.') && part !== '.' && part !== '..');
@@ -48,10 +46,7 @@ export function serveStatic(
 
     if (isDotfile) {
       if (dotfiles === 'deny') {
-        ctx.statusCode = 403;
-        ctx.res.statusCode = 403;
-        ctx.json({ error: 'Forbidden', status: 403 });
-        return;
+        throw new AuthorizationError('Forbidden');
       } else if (dotfiles === 'ignore') {
         await next();
         return;
@@ -112,10 +107,7 @@ export function serveStatic(
 
       const resolvedPath = resolve(fullPath);
       if (!resolvedPath.startsWith(root)) {
-        ctx.statusCode = 403;
-        ctx.res.statusCode = 403;
-        ctx.json({ error: 'Forbidden', status: 403 });
-        return;
+        throw new AuthorizationError('Forbidden');
       }
 
       if (maxAge > 0) {
@@ -177,10 +169,7 @@ export function serveStatic(
         await next();
         return;
       }
-      console.error('Static file serving error:', error);
-      ctx.statusCode = 500;
-      ctx.res.statusCode = 500;
-      ctx.json({ error: 'Internal Server Error', status: 500 });
+      throw new InternalError('Static file serving error', error);
     }
   };
 }

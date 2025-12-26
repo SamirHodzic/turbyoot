@@ -1,5 +1,6 @@
 import { Context } from '../types.js';
 import { randomBytes, createHash } from 'crypto';
+import { AuthorizationError, ErrorCode } from '../errors.js';
 
 export interface CsrfOptions {
   cookieName?: string;
@@ -100,24 +101,15 @@ export function csrf(options: CsrfOptions = {}) {
     const headerToken = ctx.req.headers[headerName.toLowerCase()] as string | undefined;
 
     if (!cookieToken) {
-      ctx.statusCode = 403;
-      ctx.res.statusCode = 403;
-      ctx.json({ error: 'CSRF token missing', status: 403 });
-      return;
+      throw new AuthorizationError('CSRF token missing', ErrorCode.FORBIDDEN);
     }
 
     if (!headerToken) {
-      ctx.statusCode = 403;
-      ctx.res.statusCode = 403;
-      ctx.json({ error: 'CSRF token missing in header', status: 403 });
-      return;
+      throw new AuthorizationError('CSRF token missing in header', ErrorCode.FORBIDDEN);
     }
 
     if (cookieToken !== headerToken || !verifyToken(cookieToken, secret)) {
-      ctx.statusCode = 403;
-      ctx.res.statusCode = 403;
-      ctx.json({ error: 'Invalid CSRF token', status: 403 });
-      return;
+      throw new AuthorizationError('Invalid CSRF token', ErrorCode.FORBIDDEN);
     }
 
     await next();

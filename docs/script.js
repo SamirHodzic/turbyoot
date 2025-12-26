@@ -407,6 +407,91 @@ const searchIndex = [
         content: 'template engine render HTML templates using template engines EJS Pug Handlebars configure views directory register engines use ctx.render render templates with data template rendering view engine EJS Pug Handlebars support automatic detection auto-load renderFile render manual registration engines config',
         id: 'ctx-render',
       },
+      {
+        title: 'Error Handling',
+        content: 'Comprehensive error handling system with specialized error classes, error codes for programmatic handling, and rich error details.',
+        id: 'errors',
+      },
+      {
+        title: 'AppError',
+        content: 'Base error class that all other errors extend from. Provides error codes, details array, metadata, and JSON serialization with toJSON method.',
+        id: 'error-classes',
+      },
+      {
+        title: 'ValidationError',
+        content: 'Validation error for request validation failures. Status 400. Includes field-level error details. Static methods: field, fields, required, type, format.',
+        id: 'error-classes',
+      },
+      {
+        title: 'AuthenticationError',
+        content: 'Authentication error for auth failures. Status 401. Static methods: invalidToken, tokenExpired, missingToken, invalidCredentials.',
+        id: 'error-classes',
+      },
+      {
+        title: 'AuthorizationError',
+        content: 'Authorization error for permission failures. Status 403. Static method: insufficientPermissions.',
+        id: 'error-classes',
+      },
+      {
+        title: 'NotFoundError',
+        content: 'Not found error for missing resources. Status 404. Static methods: resource, route.',
+        id: 'error-classes',
+      },
+      {
+        title: 'Error Codes',
+        content: 'ErrorCode constants for programmatic error handling. ERR_VALIDATION_FAILED, ERR_UNAUTHORIZED, ERR_INVALID_TOKEN, ERR_TOKEN_EXPIRED, ERR_FORBIDDEN, ERR_NOT_FOUND, ERR_RESOURCE_NOT_FOUND, ERR_CONFLICT, ERR_PAYLOAD_TOO_LARGE, ERR_RATE_LIMIT_EXCEEDED, ERR_REQUEST_TIMEOUT, ERR_INTERNAL.',
+        id: 'error-codes',
+      },
+      {
+        title: 'errorHandler()',
+        content: 'Built-in error handler middleware automatically added to all Turbyoot applications. No configuration needed. Options for customization: includeStack for development stack traces, onError hook for error tracking and monitoring, custom logger.',
+        id: 'error-handler',
+      },
+      {
+        title: 'Error Response Format',
+        content: 'Consistent JSON error response format with error message, status code, error code, timestamp, details array, and metadata.',
+        id: 'error-response-format',
+      },
+      {
+        title: 'Type Guards',
+        content: 'Helper functions to check error types: isAppError, isValidationError, isAuthenticationError, isAuthorizationError, isNotFoundError, isHttpError.',
+        id: 'type-guards',
+      },
+      {
+        title: 'BadRequestError',
+        content: 'Bad request error for invalid JSON or content type errors. Status 400. Static methods: invalidJson, invalidContentType.',
+        id: 'error-classes',
+      },
+      {
+        title: 'ConflictError',
+        content: 'Conflict error for resource already exists. Status 409. Static method: resourceExists.',
+        id: 'error-classes',
+      },
+      {
+        title: 'RateLimitError',
+        content: 'Rate limit error for too many requests. Status 429. Includes retryAfter, limit, remaining metadata.',
+        id: 'error-classes',
+      },
+      {
+        title: 'TimeoutError',
+        content: 'Timeout error for request timeout. Status 408. Includes timeoutMs metadata.',
+        id: 'error-classes',
+      },
+      {
+        title: 'PayloadTooLargeError',
+        content: 'Payload too large error for request body exceeding limit. Status 413. Includes limit and received metadata.',
+        id: 'error-classes',
+      },
+      {
+        title: 'InternalError',
+        content: 'Internal server error. Status 500. Not exposed to client for security. Wraps original error.',
+        id: 'error-classes',
+      },
+      {
+        title: 'ServiceUnavailableError',
+        content: 'Service unavailable error. Status 503. Includes retryAfter metadata.',
+        id: 'error-classes',
+      },
     ],
   },
 ];

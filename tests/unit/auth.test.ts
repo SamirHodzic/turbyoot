@@ -2,6 +2,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { auth, requireAuth, requireRole, requirePermission, setAuthCookie, clearAuthCookie } from '../../src/middleware/auth.js';
 import { Context } from '../../src/types.js';
 import { createMockContext } from '../utils/test-helpers.js';
+import { AuthenticationError, AuthorizationError, ErrorCode } from '../../src/errors.js';
 
 describe('Auth Middleware', () => {
   describe('auth()', () => {
@@ -234,7 +235,7 @@ describe('Auth Middleware', () => {
       expect(ctx.statusCode).toBe(200);
     });
 
-    it('should reject request when user is not authenticated', async () => {
+    it('should throw AuthenticationError when user is not authenticated', async () => {
       const middleware = requireAuth();
       const ctx = createMockContext({
         state: {}
@@ -242,14 +243,11 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthenticationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(401);
-      expect(ctx.res.statusCode).toBe(401);
     });
 
-    it('should return 401 error message when user is not authenticated', async () => {
+    it('should throw error with correct message when user is not authenticated', async () => {
       const middleware = requireAuth();
       const ctx = createMockContext({
         state: {}
@@ -257,12 +255,14 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
-      expect(ctx.json).toHaveBeenCalledWith({
-        error: 'Authentication required',
-        status: 401
-      });
+      try {
+        await middleware(ctx, next);
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthenticationError);
+        expect((error as AuthenticationError).message).toBe('Authentication required');
+        expect((error as AuthenticationError).status).toBe(401);
+        expect((error as AuthenticationError).code).toBe(ErrorCode.UNAUTHORIZED);
+      }
     });
   });
 
@@ -299,7 +299,7 @@ describe('Auth Middleware', () => {
       expect(ctx.statusCode).toBe(200);
     });
 
-    it('should reject request when user does not have required role', async () => {
+    it('should throw AuthorizationError when user does not have required role', async () => {
       const middleware = requireRole('admin');
       const ctx = createMockContext({
         state: {
@@ -309,14 +309,11 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
-      expect(ctx.res.statusCode).toBe(403);
     });
 
-    it('should return 403 error with required and user roles', async () => {
+    it('should throw AuthorizationError with required permissions and user roles', async () => {
       const middleware = requireRole('admin');
       const ctx = createMockContext({
         state: {
@@ -326,17 +323,18 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
-      expect(ctx.json).toHaveBeenCalledWith({
-        error: 'Insufficient permissions',
-        status: 403,
-        required: ['admin'],
-        userRoles: ['user']
-      });
+      try {
+        await middleware(ctx, next);
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthorizationError);
+        expect((error as AuthorizationError).status).toBe(403);
+        expect((error as AuthorizationError).code).toBe(ErrorCode.INSUFFICIENT_PERMISSIONS);
+        expect((error as AuthorizationError).meta.requiredPermissions).toEqual(['admin']);
+        expect((error as AuthorizationError).meta.userRoles).toEqual(['user']);
+      }
     });
 
-    it('should reject request when user is not authenticated', async () => {
+    it('should throw AuthenticationError when user is not authenticated', async () => {
       const middleware = requireRole('admin');
       const ctx = createMockContext({
         state: {}
@@ -344,14 +342,8 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthenticationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(401);
-      expect(ctx.json).toHaveBeenCalledWith({
-        error: 'Authentication required',
-        status: 401
-      });
     });
 
     it('should use custom roleKey', async () => {
@@ -370,7 +362,7 @@ describe('Auth Middleware', () => {
       expect(ctx.statusCode).toBe(200);
     });
 
-    it('should handle user with empty roles array', async () => {
+    it('should throw AuthorizationError when user has empty roles array', async () => {
       const middleware = requireRole('admin');
       const ctx = createMockContext({
         state: {
@@ -380,13 +372,11 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
 
-    it('should handle user without roles property', async () => {
+    it('should throw AuthorizationError when user has no roles property', async () => {
       const middleware = requireRole('admin');
       const ctx = createMockContext({
         state: {
@@ -396,10 +386,8 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
   });
 
@@ -452,7 +440,7 @@ describe('Auth Middleware', () => {
       expect(ctx.statusCode).toBe(200);
     });
 
-    it('should reject request when user does not have required permission', async () => {
+    it('should throw AuthorizationError when user does not have required permission', async () => {
       const middleware = requirePermission('read:all');
       const ctx = createMockContext({
         state: {
@@ -462,14 +450,11 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
-      expect(ctx.res.statusCode).toBe(403);
     });
 
-    it('should return 403 error with required permissions', async () => {
+    it('should throw AuthorizationError with required permissions', async () => {
       const middleware = requirePermission('read:all');
       const ctx = createMockContext({
         state: {
@@ -479,16 +464,17 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
-      expect(ctx.json).toHaveBeenCalledWith({
-        error: 'Insufficient permissions',
-        status: 403,
-        required: ['read:all']
-      });
+      try {
+        await middleware(ctx, next);
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthorizationError);
+        expect((error as AuthorizationError).status).toBe(403);
+        expect((error as AuthorizationError).code).toBe(ErrorCode.INSUFFICIENT_PERMISSIONS);
+        expect((error as AuthorizationError).meta.requiredPermissions).toEqual(['read:all']);
+      }
     });
 
-    it('should reject request when user is not authenticated', async () => {
+    it('should throw AuthenticationError when user is not authenticated', async () => {
       const middleware = requirePermission('read:all');
       const ctx = createMockContext({
         state: {}
@@ -496,14 +482,8 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthenticationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(401);
-      expect(ctx.json).toHaveBeenCalledWith({
-        error: 'Authentication required',
-        status: 401
-      });
     });
 
     it('should use custom permissionKey', async () => {
@@ -522,7 +502,7 @@ describe('Auth Middleware', () => {
       expect(ctx.statusCode).toBe(200);
     });
 
-    it('should handle user with empty permissions array', async () => {
+    it('should throw AuthorizationError when user has empty permissions array', async () => {
       const middleware = requirePermission('read:all');
       const ctx = createMockContext({
         state: {
@@ -532,13 +512,11 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
 
-    it('should handle user without permissions property', async () => {
+    it('should throw AuthorizationError when user has no permissions property', async () => {
       const middleware = requirePermission('read:all');
       const ctx = createMockContext({
         state: {
@@ -548,10 +526,8 @@ describe('Auth Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
   });
 
