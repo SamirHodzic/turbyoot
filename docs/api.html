@@ -49,6 +49,7 @@
           <li><a href="#application">Application</a></li>
           <li><a href="#context">Context</a></li>
           <li><a href="#middleware">Middleware</a></li>
+          <li><a href="#errors">Error Handling</a></li>
           <li><a href="#auth">Auth</a></li>
         </ul>
       </nav>
@@ -1422,6 +1423,312 @@ app.use(logger());</code></pre>
         <pre><code class="language-javascript">import { requestId } from 'turbyoot/middleware';
 
 app.use(requestId());</code></pre>
+      </section>
+
+      <section id="errors">
+        <h2>Error Handling</h2>
+        <p>Turbyoot provides a comprehensive error handling system with specialized error classes, error codes for programmatic handling, and rich error details.</p>
+
+        <h3 id="error-classes">Error Classes</h3>
+        <p>All error classes extend from <code>AppError</code> and include status codes, error codes, and support for detailed error information.</p>
+        
+        <h4>AppError (Base Class)</h4>
+        <p>The base error class that all other errors extend from. Provides common functionality like error codes, details array, metadata, and JSON serialization.</p>
+        <pre><code class="language-javascript">import { AppError, ErrorCode } from 'turbyoot';
+
+const error = new AppError(400, 'Something went wrong', {
+  code: ErrorCode.BAD_REQUEST,
+  details: [{ field: 'email', message: 'Invalid format' }],
+  meta: { requestId: '123' }
+});
+
+// Serialize to JSON for responses
+const json = error.toJSON();
+// { error: 'Something went wrong', status: 400, code: 'ERR_BAD_REQUEST', details: [...], timestamp: '...' }</code></pre>
+
+        <h4>ValidationError</h4>
+        <p>For request validation failures. Automatically sets status 400 and includes field-level error details.</p>
+        <pre><code class="language-javascript">import { ValidationError } from 'turbyoot';
+
+// Multiple field errors
+throw ValidationError.fields([
+  { field: 'email', message: 'Invalid email format' },
+  { field: 'age', message: 'Must be at least 18' }
+]);
+
+// Single required field
+throw ValidationError.required('email');
+
+// Type mismatch
+throw ValidationError.type('age', 'number', 'string');</code></pre>
+
+        <h4>AuthenticationError</h4>
+        <p>For authentication failures. Status 401.</p>
+        <pre><code class="language-javascript">import { AuthenticationError } from 'turbyoot';
+
+throw new AuthenticationError('Authentication required');
+throw AuthenticationError.invalidToken('Token is malformed');
+throw AuthenticationError.tokenExpired('Token has expired');
+throw AuthenticationError.missingToken();</code></pre>
+
+        <h4>AuthorizationError</h4>
+        <p>For authorization/permission failures. Status 403.</p>
+        <pre><code class="language-javascript">import { AuthorizationError } from 'turbyoot';
+
+throw new AuthorizationError('Access denied');
+throw AuthorizationError.insufficientPermissions(['admin', 'moderator']);</code></pre>
+
+        <h4>NotFoundError</h4>
+        <p>For resource not found errors. Status 404.</p>
+        <pre><code class="language-javascript">import { NotFoundError } from 'turbyoot';
+
+throw new NotFoundError('Resource not found');
+throw NotFoundError.resource('User', '123');
+throw NotFoundError.route('/api/users', 'GET');</code></pre>
+
+        <h4>Other Error Classes</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Status</th>
+              <th>Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>HttpError</code></td>
+              <td>Any</td>
+              <td>Generic HTTP error (backwards compatible)</td>
+            </tr>
+            <tr>
+              <td><code>BadRequestError</code></td>
+              <td>400</td>
+              <td>Invalid JSON, content type errors</td>
+            </tr>
+            <tr>
+              <td><code>ConflictError</code></td>
+              <td>409</td>
+              <td>Resource already exists</td>
+            </tr>
+            <tr>
+              <td><code>PayloadTooLargeError</code></td>
+              <td>413</td>
+              <td>Request body exceeds limit</td>
+            </tr>
+            <tr>
+              <td><code>RateLimitError</code></td>
+              <td>429</td>
+              <td>Rate limit exceeded</td>
+            </tr>
+            <tr>
+              <td><code>TimeoutError</code></td>
+              <td>408</td>
+              <td>Request timeout</td>
+            </tr>
+            <tr>
+              <td><code>InternalError</code></td>
+              <td>500</td>
+              <td>Server errors (not exposed to client)</td>
+            </tr>
+            <tr>
+              <td><code>ServiceUnavailableError</code></td>
+              <td>503</td>
+              <td>Service temporarily unavailable</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="error-codes">Error Codes</h3>
+        <p>Error codes allow programmatic handling of errors. All codes are prefixed with <code>ERR_</code>.</p>
+        <pre><code class="language-javascript">import { ErrorCode } from 'turbyoot';
+
+// Validation codes
+ErrorCode.VALIDATION_FAILED       // 'ERR_VALIDATION_FAILED'
+ErrorCode.MISSING_REQUIRED_FIELD  // 'ERR_MISSING_REQUIRED_FIELD'
+ErrorCode.INVALID_FIELD_TYPE      // 'ERR_INVALID_FIELD_TYPE'
+ErrorCode.INVALID_FIELD_FORMAT    // 'ERR_INVALID_FIELD_FORMAT'
+
+// Auth codes
+ErrorCode.UNAUTHORIZED            // 'ERR_UNAUTHORIZED'
+ErrorCode.INVALID_TOKEN           // 'ERR_INVALID_TOKEN'
+ErrorCode.TOKEN_EXPIRED           // 'ERR_TOKEN_EXPIRED'
+ErrorCode.FORBIDDEN               // 'ERR_FORBIDDEN'
+ErrorCode.INSUFFICIENT_PERMISSIONS // 'ERR_INSUFFICIENT_PERMISSIONS'
+
+// Resource codes
+ErrorCode.NOT_FOUND               // 'ERR_NOT_FOUND'
+ErrorCode.RESOURCE_NOT_FOUND      // 'ERR_RESOURCE_NOT_FOUND'
+ErrorCode.CONFLICT                // 'ERR_CONFLICT'
+ErrorCode.RESOURCE_EXISTS         // 'ERR_RESOURCE_EXISTS'
+
+// Other codes
+ErrorCode.PAYLOAD_TOO_LARGE       // 'ERR_PAYLOAD_TOO_LARGE'
+ErrorCode.RATE_LIMIT_EXCEEDED     // 'ERR_RATE_LIMIT_EXCEEDED'
+ErrorCode.REQUEST_TIMEOUT         // 'ERR_REQUEST_TIMEOUT'
+ErrorCode.INTERNAL                // 'ERR_INTERNAL'</code></pre>
+
+        <h3 id="error-handler">errorHandler(options)</h3>
+        <p>The built-in error handler middleware. <strong>Automatically added to all Turbyoot applications</strong> - you don't need to add it yourself. Errors thrown from routes or middleware are automatically caught and formatted as JSON responses.</p>
+        <p><strong>Default behavior (no configuration needed):</strong></p>
+        <pre><code class="language-javascript">import { Turbyoot, NotFoundError } from 'turbyoot';
+
+const app = new Turbyoot();
+
+// Just throw errors - they're automatically handled!
+app.get('/users/:id', async (ctx) => {
+  const user = await db.find(ctx.params.id);
+  if (!user) {
+    throw NotFoundError.resource('User', ctx.params.id);
+  }
+  ctx.ok({ user });
+});
+
+app.listen(3000);</code></pre>
+        <p><strong>Custom configuration (optional):</strong></p>
+        <p>If you want to customize error handling (e.g., add error tracking, include stack traces in development), you can add a configured errorHandler:</p>
+        <pre><code class="language-javascript">import { Turbyoot, errorHandler } from 'turbyoot';
+
+const app = new Turbyoot();
+
+// Optional: customize error handling
+app.use(errorHandler({
+  includeStack: process.env.NODE_ENV === 'development',
+  onError: async (error, ctx) => {
+    // Send to error tracking service
+    await errorTracker.capture(error, {
+      url: ctx.req.url,
+      method: ctx.req.method
+    });
+  },
+  logger: customLogger
+}));</code></pre>
+        <p><strong>Options:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>includeStack</code></td>
+              <td>Include stack trace in error response (useful for development)</td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+            </tr>
+            <tr>
+              <td><code>onError</code></td>
+              <td>Hook called when an error occurs (for logging/monitoring)</td>
+              <td><code>(error: Error, ctx: Context) => void | Promise&lt;void&gt;</code></td>
+              <td><code>undefined</code></td>
+            </tr>
+            <tr>
+              <td><code>logger</code></td>
+              <td>Custom logger instance</td>
+              <td><code>{ error: (msg, ...args) => void }</code></td>
+              <td><code>console</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 id="error-response-format">Error Response Format</h3>
+        <p>All errors are serialized to a consistent JSON format:</p>
+        <pre><code class="language-javascript">// Simple error
+{
+  "error": "Validation failed",
+  "status": 400,
+  "code": "ERR_VALIDATION_FAILED",
+  "timestamp": "2025-01-01T00:00:00.000Z"
+}
+
+// Error with details (e.g., validation)
+{
+  "error": "Validation failed",
+  "status": 400,
+  "code": "ERR_VALIDATION_FAILED",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "details": [
+    {
+      "field": "email",
+      "message": "body.email is required",
+      "code": "ERR_MISSING_REQUIRED_FIELD"
+    },
+    {
+      "field": "age",
+      "message": "body.age must be a number",
+      "code": "ERR_INVALID_FIELD_TYPE",
+      "expected": "number",
+      "received": "string"
+    }
+  ]
+}
+
+// Error with metadata
+{
+  "error": "Insufficient permissions",
+  "status": 403,
+  "code": "ERR_INSUFFICIENT_PERMISSIONS",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "meta": {
+    "requiredPermissions": ["admin"],
+    "userRoles": ["user"]
+  }
+}</code></pre>
+
+        <h3 id="type-guards">Type Guards</h3>
+        <p>Helper functions to check error types:</p>
+        <pre><code class="language-javascript">import { 
+  isAppError, 
+  isValidationError, 
+  isAuthenticationError,
+  isNotFoundError 
+} from 'turbyoot';
+
+try {
+  await someOperation();
+} catch (error) {
+  if (isValidationError(error)) {
+    // Handle validation errors
+    console.log(error.details);
+  } else if (isAuthenticationError(error)) {
+    // Redirect to login
+  } else if (isNotFoundError(error)) {
+    // Show 404 page
+  }
+}</code></pre>
+
+        <h3 id="throwing-errors">Throwing Errors in Route Handlers</h3>
+        <p>Simply throw errors in your route handlers. The error handler middleware will catch them and send the appropriate response.</p>
+        <pre><code class="language-javascript">import { NotFoundError, ValidationError, AuthenticationError } from 'turbyoot';
+
+app.get('/users/:id', async (ctx) => {
+  const user = await db.findUser(ctx.params.id);
+  
+  if (!user) {
+    throw NotFoundError.resource('User', ctx.params.id);
+  }
+  
+  ctx.ok({ user });
+});
+
+app.post('/users', async (ctx) => {
+  const { email, password } = ctx.body;
+  
+  const errors = [];
+  if (!email) errors.push({ field: 'email', message: 'Email is required' });
+  if (!password) errors.push({ field: 'password', message: 'Password is required' });
+  
+  if (errors.length > 0) {
+    throw ValidationError.fields(errors);
+  }
+  
+  const user = await db.createUser({ email, password });
+  ctx.created({ user });
+});</code></pre>
       </section>
 
       <section id="auth">

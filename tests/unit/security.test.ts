@@ -2,6 +2,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { helmet, cors, rateLimit } from '../../src/middleware/security.js';
 import { Context } from '../../src/types.js';
 import { createMockContext } from '../utils/test-helpers.js';
+import { RateLimitError } from '../../src/errors.js';
 
 describe('Security Middleware', () => {
   describe('helmet()', () => {
@@ -690,16 +691,11 @@ describe('Security Middleware', () => {
         } as any
       });
 
-      await middleware(thirdRequest, next);
+      await expect(middleware(thirdRequest, next)).rejects.toThrow(RateLimitError);
+      await expect(middleware(thirdRequest, next)).rejects.toThrow('Too many requests');
 
       expect(next).toHaveBeenCalledTimes(2);
-      expect(thirdRequest.statusCode).toBe(429);
-      expect(thirdRequest.res.statusCode).toBe(429);
       expect(thirdRequest.res.setHeader).toHaveBeenCalledWith('Retry-After', 1);
-      expect(thirdRequest.json).toHaveBeenCalledWith({
-        error: 'Too many requests',
-        status: 429
-      });
     });
 
     it('should use custom message', async () => {
@@ -735,12 +731,8 @@ describe('Security Middleware', () => {
       });
 
       await middleware(ctx1, next);
-      await middleware(ctx2, next);
-
-      expect(ctx2.json).toHaveBeenCalledWith({
-        error: 'Rate limit exceeded',
-        status: 429
-      });
+      await expect(middleware(ctx2, next)).rejects.toThrow(RateLimitError);
+      await expect(middleware(ctx2, next)).rejects.toThrow('Rate limit exceeded');
     });
 
     it('should skip rate limiting when skip returns true', async () => {
@@ -863,9 +855,7 @@ describe('Security Middleware', () => {
       });
 
       await middleware(ctx1, next);
-      await middleware(ctx2, next);
-
-      expect(ctx2.statusCode).toBe(429);
+      await expect(middleware(ctx2, next)).rejects.toThrow(RateLimitError);
     });
 
     it('should calculate Retry-After correctly', async () => {
@@ -893,8 +883,7 @@ describe('Security Middleware', () => {
       });
 
       await middleware(ctx1, next);
-      await middleware(ctx2, next);
-
+      await expect(middleware(ctx2, next)).rejects.toThrow(RateLimitError);
       expect(ctx2.res.setHeader).toHaveBeenCalledWith('Retry-After', 5);
     });
   });

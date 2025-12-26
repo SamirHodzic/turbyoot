@@ -5,6 +5,7 @@ import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { IncomingMessage, ServerResponse } from 'http';
+import { AuthorizationError } from '../../src/errors.js';
 
 describe('Static File Serving', () => {
   const testDir = join(process.cwd(), 'test-static');
@@ -467,10 +468,8 @@ describe('Static File Serving', () => {
 
       const ctx = createMockContext({ req: mockReq, res: mockRes });
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
 
     it('should prevent path traversal with ~', async () => {
@@ -491,10 +490,8 @@ describe('Static File Serving', () => {
 
       const ctx = createMockContext({ req: mockReq, res: mockRes });
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
 
     it('should ignore dotfiles when dotfiles is "ignore"', async () => {
@@ -538,10 +535,8 @@ describe('Static File Serving', () => {
 
       const ctx = createMockContext({ req: mockReq, res: mockRes });
 
-      await middleware(ctx, next);
-
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       expect(next).not.toHaveBeenCalled();
-      expect(ctx.statusCode).toBe(403);
     });
 
     it('should allow dotfiles when dotfiles is "allow"', async () => {
@@ -740,9 +735,7 @@ describe('Static File Serving', () => {
 
       const ctx = createMockContext({ req: mockReq, res: mockRes });
 
-      await middleware(ctx, next);
-
-      expect(ctx.statusCode).toBe(403);
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
       
       await rm(outsideDir, { recursive: true, force: true });
     });

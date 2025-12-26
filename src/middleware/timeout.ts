@@ -1,4 +1,5 @@
 import { Context, TimeoutOptions } from '../types.js';
+import { TimeoutError } from '../errors.js';
 
 export function timeout(options: TimeoutOptions) {
   const { timeout: timeoutMs, onTimeout } = options;
@@ -15,10 +16,11 @@ export function timeout(options: TimeoutOptions) {
           onTimeout(ctx);
         }
 
-        ctx.statusCode = 408;
-        ctx.res.statusCode = 408;
+        const error = new TimeoutError('Request timeout', timeoutMs);
+        ctx.statusCode = error.status;
+        ctx.res.statusCode = error.status;
         ctx.res.setHeader('Connection', 'close');
-        ctx.json({ error: 'Request timeout', status: 408 });
+        ctx.json(error.toJSON());
       }
     }, timeoutMs);
 

@@ -20,7 +20,7 @@ import { compilePath } from './utils/path.js';
 import { parseBody } from './utils/body.js';
 import { parseQueryParams } from './utils/query.js';
 import { sanitize } from './utils/sanitize.js';
-import { errorHandler } from './errors.js';
+import { errorHandler, PayloadTooLargeError, BadRequestError, AppError, ErrorCode, NotFoundError } from './errors.js';
 import { FluentRouter, PluginManager } from './fluent.js';
 import { serveStatic } from './middleware/static.js';
 import { StaticOptions } from './types.js';
@@ -188,9 +188,19 @@ export class Turbyoot {
             body = sanitize(rawBody);
           } catch (error: any) {
             if (error?.message?.includes('exceeds limit')) {
-              res.statusCode = 413;
+              const payloadError = new PayloadTooLargeError('Request body exceeds size limit', {
+                limit: this.bodyLimit,
+              });
+              res.statusCode = payloadError.status;
               res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ error: 'Payload Too Large', status: 413 }));
+              res.end(JSON.stringify(payloadError.toJSON()));
+              return;
+            }
+            if (error?.message?.includes('JSON') || error instanceof SyntaxError) {
+              const jsonError = BadRequestError.invalidJson(error?.message);
+              res.statusCode = jsonError.status;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify(jsonError.toJSON()));
               return;
             }
             console.error('Body parsing error:', error);
@@ -229,19 +239,40 @@ export class Turbyoot {
         const routeMiddleware = matchedRoute.middleware || [];
         await executeMiddlewareChain(ctx, [...this.middleware, ...routeMiddleware], matchedRoute.handler);
       } else {
-        const notFoundHandler: RouteHandler = async (ctx) => {
-          ctx.statusCode = 404;
-          ctx.res.statusCode = 404;
-          ctx.json({ error: 'Not Found', status: 404 });
+        const notFoundHandler: RouteHandler = async () => {
+          throw NotFoundError.route(pathname, method);
         };
         await executeMiddlewareChain(ctx, this.middleware, notFoundHandler);
       }
     } catch (error) {
-      console.error('Server error:', error);
       if (!res.headersSent) {
-        res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Internal Server Error', status: 500 }));
+        
+        if (error instanceof AppError) {
+          res.statusCode = error.status;
+          if (error.expose) {
+            res.end(JSON.stringify(error.toJSON()));
+          } else {
+            console.error('Internal error:', error);
+            res.end(JSON.stringify({
+              error: 'Internal Server Error',
+              status: 500,
+              code: ErrorCode.INTERNAL,
+              timestamp: new Date().toISOString(),
+            }));
+          }
+        } else {
+          console.error('Unhandled error:', error);
+          res.statusCode = 500;
+          res.end(JSON.stringify({
+            error: 'Internal Server Error',
+            status: 500,
+            code: ErrorCode.INTERNAL,
+            timestamp: new Date().toISOString(),
+          }));
+        }
+      } else {
+        console.error('Error after headers sent:', error);
       }
     }
   }

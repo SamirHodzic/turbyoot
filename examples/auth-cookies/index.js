@@ -1,5 +1,6 @@
 import { Turbyoot } from 'turbyoot';
 import { auth, requireAuth, requireRole, requirePermission, setAuthCookie, clearAuthCookie } from 'turbyoot/middleware';
+import { ValidationError, AuthenticationError } from 'turbyoot/core';
 
 const app = new Turbyoot();
 
@@ -64,18 +65,15 @@ app.post('/auth/login', async (ctx) => {
   const { email, password } = ctx.body;
 
   if (!email || !password) {
-    ctx.statusCode = 400;
-    ctx.res.statusCode = 400;
-    ctx.json({ error: 'Email and password are required', status: 400 });
-    return;
+    throw ValidationError.fields([
+      ...(!email ? [{ field: 'email', message: 'Email is required' }] : []),
+      ...(!password ? [{ field: 'password', message: 'Password is required' }] : []),
+    ]);
   }
 
   const user = userDatabase[email];
   if (!user || user.password !== password) {
-    ctx.statusCode = 401;
-    ctx.res.statusCode = 401;
-    ctx.json({ error: 'Invalid credentials', status: 401 });
-    return;
+    throw AuthenticationError.invalidCredentials();
   }
 
   const token = `${user.email.split('@')[0]}-token`;

@@ -102,7 +102,10 @@ describe('Basic Routing Integration Tests', () => {
     it('should return 404 for non-existent routes', async () => {
       const response = await fetch(`${baseUrl}/nonexistent`);
       expect(response.status).toBe(404);
-      expect(await response.json()).toEqual({ error: 'Not Found', status: 404 });
+      const data = await response.json();
+      expect(data.status).toBe(404);
+      expect(data.code).toBe('ERR_ROUTE_NOT_FOUND');
+      expect(data.error).toContain('not found');
     });
   });
 

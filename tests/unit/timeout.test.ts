@@ -33,7 +33,9 @@ describe('Timeout Middleware', () => {
       expect(ctx.statusCode).toBe(408);
       expect(ctx.res.statusCode).toBe(408);
       expect(ctx.res.setHeader).toHaveBeenCalledWith('Connection', 'close');
-      expect(ctx.json).toHaveBeenCalledWith({ error: 'Request timeout', status: 408 });
+      expect(ctx.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Request timeout', status: 408 })
+      );
     });
 
     it('should call onTimeout callback when timeout occurs', async () => {

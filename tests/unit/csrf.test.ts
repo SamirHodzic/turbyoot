@@ -1,6 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { csrf } from '../../src/middleware/csrf.js';
 import { createMockContext } from '../utils/test-helpers.js';
+import { AuthorizationError } from '../../src/errors.js';
 
 describe('CSRF Middleware', () => {
   describe('csrf()', () => {
@@ -41,11 +42,8 @@ describe('CSRF Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
-      expect(ctx.statusCode).toBe(403);
-      expect(ctx.res.statusCode).toBe(403);
-      expect(ctx.json).toHaveBeenCalledWith({ error: 'CSRF token missing', status: 403 });
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
+      await expect(middleware(ctx, next)).rejects.toThrow('CSRF token missing');
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -66,10 +64,8 @@ describe('CSRF Middleware', () => {
 
       const next = jest.fn(async () => {});
 
-      await middleware(ctx, next);
-
-      expect(ctx.statusCode).toBe(403);
-      expect(ctx.json).toHaveBeenCalledWith({ error: 'CSRF token missing in header', status: 403 });
+      await expect(middleware(ctx, next)).rejects.toThrow(AuthorizationError);
+      await expect(middleware(ctx, next)).rejects.toThrow('CSRF token missing in header');
       expect(next).not.toHaveBeenCalled();
     });
 

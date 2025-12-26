@@ -1,4 +1,5 @@
 import { Context, SecurityOptions, RateLimitOptions, CorsOptions } from '../types.js';
+import { AuthorizationError, RateLimitError } from '../errors.js';
 
 export function helmet(options: SecurityOptions = {}) {
   return async (ctx: Context, next: () => Promise<void>) => {
@@ -189,10 +190,7 @@ export function cors(options: CorsOptions = {}) {
       if (validateCredentials) {
         const isValid = await validateCredentials(allowedOrigin);
         if (!isValid) {
-          ctx.statusCode = 403;
-          ctx.res.statusCode = 403;
-          ctx.json({ error: 'Credentials validation failed', status: 403 });
-          return;
+          throw new AuthorizationError('Credentials validation failed');
         }
       }
       ctx.res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -262,11 +260,11 @@ export function rateLimit(options: RateLimitOptions) {
     } else if (current.resetTime < windowStart) {
       requests.set(key, { count: 1, resetTime: now });
     } else if (current.count >= max) {
-      ctx.statusCode = 429;
-      ctx.res.statusCode = 429;
       ctx.res.setHeader('Retry-After', Math.ceil(windowMs / 1000));
-      ctx.json({ error: message, status: 429 });
-      return;
+      throw new RateLimitError(message, {
+        retryAfter: Math.ceil(windowMs / 1000),
+        limit: max,
+      });
     } else {
       current.count++;
     }

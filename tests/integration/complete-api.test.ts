@@ -432,7 +432,10 @@ describe('Complete API Integration Tests', () => {
     it('should handle 404 for non-existent routes', async () => {
       const response = await fetch(`${baseUrl}/api/nonexistent`);
       expect(response.status).toBe(404);
-      expect(await response.json()).toEqual({ error: 'Not Found', status: 404 });
+      const data = await response.json();
+      expect(data.status).toBe(404);
+      expect(data.code).toBe('ERR_ROUTE_NOT_FOUND');
+      expect(data.error).toContain('not found');
     });
   });
 
@@ -467,8 +470,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('required');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('required'))).toBe(true);
     });
 
     it('should reject request with invalid email format', async () => {
@@ -483,8 +487,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('format is invalid');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('format is invalid'))).toBe(true);
     });
 
     it('should reject request with invalid age range', async () => {
@@ -500,8 +505,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('at most 120');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('at most 120'))).toBe(true);
     });
 
     it('should reject unknown fields when allowUnknown is false', async () => {
@@ -517,8 +523,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('is not allowed');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('is not allowed'))).toBe(true);
     });
 
     it('should strip unknown fields when stripUnknown is true', async () => {
@@ -557,8 +564,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('required');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('required'))).toBe(true);
     });
 
     it('should reject request with invalid query parameter value', async () => {
@@ -566,8 +574,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('at least 2 characters');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('at least 2 characters'))).toBe(true);
     });
 
     it('should validate route parameters', async () => {
@@ -584,8 +593,9 @@ describe('Complete API Integration Tests', () => {
       
       expect(response.status).toBe(400);
       const data = await response.json() as any;
-      expect(data.error).toContain('must be a number');
+      expect(data.error).toBe('Validation failed');
       expect(data.status).toBe(400);
+      expect(data.details.some((d: any) => d.message.includes('must be a number'))).toBe(true);
     });
   });
 
@@ -646,10 +656,9 @@ describe('Complete API Integration Tests', () => {
       const response = await fetch(`${baseUrl}/api/protected`);
       expect(response.status).toBe(401);
       const data = await response.json() as any;
-      expect(data).toEqual({
-        error: 'Authentication required',
-        status: 401
-      });
+      expect(data.error).toBe('Authentication required');
+      expect(data.status).toBe(401);
+      expect(data.code).toBe('ERR_UNAUTHORIZED');
     });
 
     it('should allow access with required role', async () => {
@@ -672,12 +681,11 @@ describe('Complete API Integration Tests', () => {
       });
       expect(response.status).toBe(403);
       const data = await response.json() as any;
-      expect(data).toEqual({
-        error: 'Insufficient permissions',
-        status: 403,
-        required: ['admin'],
-        userRoles: ['user']
-      });
+      expect(data.error).toBe('Insufficient permissions');
+      expect(data.status).toBe(403);
+      expect(data.code).toBe('ERR_INSUFFICIENT_PERMISSIONS');
+      expect(data.meta.requiredPermissions).toEqual(['admin']);
+      expect(data.meta.userRoles).toEqual(['user']);
     });
 
     it('should allow access with required permission', async () => {
